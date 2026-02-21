@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { supabase } from './lib/supabase';
-import { Eye, EyeOff, Send, MessageSquare, X, Bike } from 'lucide-react';
+import { Eye, EyeOff, Send, MessageSquare, X, Bike, Paperclip, Download, FileText, PlayCircle, Image as ImageIcon } from 'lucide-react';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -263,7 +263,9 @@ function Chat({ user }) {
     const [newMessage, setNewMessage] = useState('');
     const [loading, setLoading] = useState(false);
     const [onlineCount, setOnlineCount] = useState(0);
+    const [uploading, setUploading] = useState(false);
     const scrollRef = useRef(null);
+    const fileInputRef = useRef(null);
 
     useEffect(() => {
         if (!user) return;
@@ -348,6 +350,92 @@ function Chat({ user }) {
         setLoading(false);
     };
 
+    const handleFileUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file || !user) return;
+
+        try {
+            setUploading(true);
+
+            // 1. Créer un nom de fichier unique
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Math.random()}-${new Date().getTime()}.${fileExt}`;
+            const filePath = `${user.id}/${fileName}`;
+
+            // 2. Upload vers Supabase Storage
+            const { error: uploadError } = await supabase.storage
+                .from('chat-files')
+                .upload(filePath, file);
+
+            if (uploadError) throw uploadError;
+
+            // 3. Récupérer l'URL publique
+            const { data: { publicUrl } } = supabase.storage
+                .from('chat-files')
+                .getPublicUrl(filePath);
+
+            // 4. Envoyer le message avec le lien du fichier
+            const { error: msgError } = await supabase.from('messages').insert([
+                {
+                    content: `A partagé un fichier : ${file.name}`,
+                    user_id: user.id,
+                    nickname: user.user_metadata?.nickname || user.email.split('@')[0],
+                    file_url: publicUrl
+                }
+            ]);
+
+            if (msgError) throw msgError;
+
+        } catch (error) {
+            console.error('Erreur upload:', error);
+            alert('Erreur lors de l\'envoi du fichier.');
+        } finally {
+            setUploading(false);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+    };
+
+    const renderMessageContent = (msg) => {
+        if (!msg.file_url) return msg.content;
+
+        const isImage = msg.file_url.match(/\.(jpeg|jpg|gif|png|webp)/i);
+        const isVideo = msg.file_url.match(/\.(mp4|webm|ogg)/i);
+
+        return (
+            <div className="space-y-2 mt-2">
+                {isImage ? (
+                    <div className="relative group/media">
+                        <img
+                            src={msg.file_url}
+                            alt="Média chat"
+                            className="rounded-lg max-w-full h-auto border-2 border-white/10 hover:border-accent transition-colors"
+                        />
+                    </div>
+                ) : isVideo ? (
+                    <video controls className="rounded-lg max-w-full border-2 border-white/10">
+                        <source src={msg.file_url} />
+                    </video>
+                ) : (
+                    <div className="flex items-center gap-3 bg-white/5 p-3 rounded-lg border border-white/10">
+                        <FileText className="text-accent" size={24} />
+                        <span className="text-[10px] truncate max-w-[150px]">{msg.content.replace('A partagé un fichier : ', '')}</span>
+                    </div>
+                )}
+
+                <a
+                    href={msg.file_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    download
+                    className="flex items-center gap-2 text-[9px] uppercase font-black text-accent hover:text-white transition-colors bg-white/5 py-1 px-2 rounded w-fit"
+                >
+                    <Download size={10} strokeWidth={3} />
+                    Télécharger
+                </a>
+            </div>
+        );
+    };
+
     if (!user) return null;
 
     return (
@@ -406,7 +494,7 @@ function Chat({ user }) {
                                         ? 'bg-accent/10 border-accent text-white rounded-tr-none'
                                         : 'bg-white/5 border-white/20 text-white/90 rounded-tl-none'
                                         }`}>
-                                        {msg.content}
+                                        {renderMessageContent(msg)}
                                     </div>
                                 </div>
                             ))
@@ -414,21 +502,40 @@ function Chat({ user }) {
                     </div>
 
                     {/* Input Area */}
-                    <form onSubmit={handleSendMessage} className="p-4 bg-dark border-t-4 border-accent/20 flex gap-2">
-                        <input
-                            type="text"
-                            value={newMessage}
-                            onChange={(e) => setNewMessage(e.target.value)}
-                            placeholder="Un message pour l'équipage ?"
-                            className="flex-1 bg-white/5 border-2 border-white/10 rounded-lg px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-accent transition-colors"
-                        />
-                        <button
-                            type="submit"
-                            disabled={loading || !newMessage.trim()}
-                            className="w-10 h-10 bg-accent text-white rounded-lg flex items-center justify-center hover:bg-white hover:text-accent transition-all disabled:opacity-30"
-                        >
-                            <Send size={18} strokeWidth={3} />
-                        </button>
+                    <form onSubmit={handleSendMessage} className="p-4 bg-dark border-t-4 border-accent/20 flex flex-col gap-2">
+                        <div className="flex gap-2">
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                onChange={handleFileUpload}
+                                className="hidden"
+                                accept="image/*,video/*,.pdf,.doc,.docx"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => fileInputRef.current?.click()}
+                                disabled={uploading}
+                                className={`w-10 h-10 rounded-lg flex items-center justify-center border-2 transition-all ${uploading ? 'bg-white/5 border-white/10 animate-pulse' : 'bg-white/5 border-white/10 text-white/40 hover:border-accent hover:text-accent'
+                                    }`}
+                            >
+                                {uploading ? <div className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin" /> : <Paperclip size={18} />}
+                            </button>
+                            <input
+                                type="text"
+                                value={newMessage}
+                                onChange={(e) => setNewMessage(e.target.value)}
+                                placeholder={uploading ? "Chargement du fichier..." : "Un message pour l'équipage ?"}
+                                disabled={uploading}
+                                className="flex-1 bg-white/5 border-2 border-white/10 rounded-lg px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-accent transition-colors"
+                            />
+                            <button
+                                type="submit"
+                                disabled={loading || uploading || !newMessage.trim()}
+                                className="w-10 h-10 bg-accent text-white rounded-lg flex items-center justify-center hover:bg-white hover:text-accent transition-all disabled:opacity-30"
+                            >
+                                <Send size={18} strokeWidth={3} />
+                            </button>
+                        </div>
                     </form>
                 </div>
             )}
