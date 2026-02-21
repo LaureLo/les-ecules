@@ -1,0 +1,41 @@
+{
+  "devDependencies": {
+    "@vitejs/plugin-react-swc": "^4.2.3",
+    "autoprefixer": "^10.4.24",
+    "gsap": "^3.14.2",
+    "lucide-react": "^0.575.0",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.17",
+    "vite": "^7.3.1"
+  },
+  "name": "one_shot_site_built",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.97.0",
+    "baseline-browser-mapping": "^2.10.0",
+    "browserslist": "^4.28.1",
+    "caniuse-lite": "^1.0.30001770",
+    "electron-to-chromium": "^1.5.302",
+    "escalade": "^3.2.0",
+    "fraction.js": "^5.3.4",
+    "nanoid": "^3.3.11",
+    "node-releases": "^2.0.27",
+    "picocolors": "^1.1.1",
+    "postcss-value-parser": "^4.2.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "source-map-js": "^1.2.1",
+    "update-browserslist-db": "^1.2.3"
+  },
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

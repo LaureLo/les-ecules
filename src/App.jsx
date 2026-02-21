@@ -1,0 +1,972 @@
+import { useEffect, useRef, useState } from 'react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { supabase } from './lib/supabase';
+import { Eye, EyeOff, Send, MessageSquare, X } from 'lucide-react';
+
+gsap.registerPlugin(ScrollTrigger);
+
+function HeaderLogo() {
+    return (
+        <div className="flex items-center justify-center w-[88px] h-[88px] -ml-4 transition-transform duration-300 hover:rotate-12 bg-white rounded-full border-2 border-dark/5 shadow-sm">
+            <svg viewBox="0 0 120 120" className="w-[85%] h-[85%] text-accent drop-shadow-sm">
+                <defs>
+                    <path id="top-arc" d="M 24,60 A 36,36 0 0,1 96,60" fill="none" />
+                    <path id="bottom-arc" d="M 14,60 A 46,46 0 0,0 106,60" fill="none" />
+                </defs>
+                <circle cx="60" cy="60" r="58" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                <circle cx="60" cy="60" r="54" fill="none" stroke="currentColor" strokeWidth="2.5" />
+                <circle cx="60" cy="60" r="28" fill="none" stroke="currentColor" strokeWidth="1" />
+
+                <text className="font-sans font-bold text-[15px] uppercase tracking-widest" fill="currentColor">
+                    <textPath href="#top-arc" startOffset="50%" textAnchor="middle" letterSpacing="0.1em">
+                        LES
+                    </textPath>
+                </text>
+                <text className="font-sans font-bold text-[15px] uppercase tracking-widest" fill="currentColor">
+                    <textPath href="#bottom-arc" startOffset="50%" textAnchor="middle" letterSpacing="0.1em">
+                        ÉCULÉS
+                    </textPath>
+                </text>
+
+                <circle cx="18" cy="60" r="2.5" fill="currentColor" />
+                <circle cx="102" cy="60" r="2.5" fill="currentColor" />
+
+                <g transform="translate(37, 35) scale(0.5)">
+                    <circle cx="25" cy="65" r="16" fill="none" stroke="currentColor" strokeWidth="4" />
+                    <circle cx="75" cy="65" r="16" fill="none" stroke="currentColor" strokeWidth="4" />
+                    <path d="M25 65 L40 35 L68 35 L75 65" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M40 35 L34 20 M25 20 L38 20" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M68 35 L50 65 L25 65" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M68 35 L72 22 C 77 14 85 20 80 28" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+                    <circle cx="50" cy="65" r="4" fill="none" stroke="currentColor" strokeWidth="4" />
+                </g>
+            </svg>
+        </div>
+    );
+}
+
+function Navbar({ user, onJoinClick }) {
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+    const handleSignOut = async () => {
+        await supabase.auth.signOut();
+    };
+
+    return (
+        <nav
+            className="group fixed top-6 left-1/2 -translate-x-1/2 z-50 flex items-center justify-between px-6 py-3 rounded-full transition-all duration-300 w-[90%] max-w-5xl border border-dark/10 bg-background/80 backdrop-blur-xl shadow-lg text-accent"
+        >
+            <HeaderLogo />
+            <div className="hidden md:flex gap-8 font-mono text-lg uppercase">
+                <a href="#features" className="hover:-translate-y-[1px] transition-all duration-300">Itinéraire</a>
+                <a href="#features" className="hover:-translate-y-[1px] transition-all duration-300">Dates</a>
+                <a href="#features" className="hover:-translate-y-[1px] transition-all duration-300">Équipage</a>
+            </div>
+
+            <div className="flex items-center gap-4">
+                {user ? (
+                    <div className="relative group/user">
+                        <button
+                            className="flex items-center gap-2 bg-dark text-white px-4 py-2 rounded-full font-mono text-xs uppercase tracking-widest hover:bg-accent transition-colors"
+                        >
+                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                            {user.user_metadata?.nickname || user.email.split('@')[0]}
+                        </button>
+                        <div className="absolute right-0 top-full pt-2 w-48 opacity-0 group-hover/user:opacity-100 transition-all pointer-events-none group-hover/user:pointer-events-auto">
+                            <div className="bg-[#F5F3EE] border-4 border-dark rounded-xl shadow-[8px_8px_0px_0px_#111111] p-2">
+                                <button
+                                    onClick={handleSignOut}
+                                    className="w-full text-left px-4 py-2 hover:bg-black/5 rounded-lg font-mono text-xs uppercase text-dark font-bold"
+                                >
+                                    Se déconnecter
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    <button
+                        onClick={onJoinClick}
+                        className="btn-magnetic bg-accent text-white px-5 py-2 rounded-full font-sans font-bold text-sm tracking-wide"
+                    >
+                        Rejoindre
+                    </button>
+                )}
+            </div>
+        </nav>
+    );
+}
+
+function AuthModal({ onClose }) {
+    const [isLogin, setIsLogin] = useState(true);
+    const [email, setEmail] = useState('');
+    const [nickname, setNickname] = useState('');
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+
+    const handleAuth = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setError(null);
+
+        try {
+            if (isLogin) {
+                const { error } = await supabase.auth.signInWithPassword({ email, password });
+                if (error) throw error;
+            } else {
+                if (password !== confirmPassword) {
+                    throw new Error("Les mots de passe ne correspondent pas.");
+                }
+                const { error } = await supabase.auth.signUp({
+                    email,
+                    password,
+                    options: {
+                        data: {
+                            nickname: nickname
+                        }
+                    }
+                });
+                if (error) throw error;
+                alert('Vérifiez vos emails pour confirmer l\'inscription !');
+            }
+            onClose();
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div
+            className="fixed inset-0 flex items-center justify-center p-4 z-[99999999]"
+            style={{ backgroundColor: 'rgba(0,0,0,0.98)' }}
+            onClick={onClose}
+        >
+            <div
+                className="w-full max-w-md bg-[#F5F3EE] rounded-[2.5rem] border-[8px] border-dark p-8 relative shadow-[25px_25px_0px_0px_#E63B2E]"
+                onClick={(e) => e.stopPropagation()}
+            >
+                <button
+                    onClick={onClose}
+                    className="absolute -top-4 -right-4 w-12 h-12 bg-accent text-white rounded-full flex items-center justify-center border-4 border-dark shadow-xl hover:scale-110 transition-transform"
+                >
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+
+                <h2 className="font-sans font-black text-4xl uppercase tracking-tighter text-dark mb-6 italic">
+                    {isLogin ? 'Connexion' : 'Inscription'}
+                </h2>
+
+                <form onSubmit={handleAuth} className="space-y-4">
+                    <div>
+                        <label className="block font-mono text-[10px] uppercase font-bold text-dark mb-1">Votre adresse email</label>
+                        <input
+                            type="email"
+                            required
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            className="w-full bg-white border-4 border-dark rounded-xl px-4 py-3 font-mono text-sm focus:outline-none focus:border-accent transition-colors"
+                            placeholder="exemple@email.com"
+                        />
+                    </div>
+
+                    {!isLogin && (
+                        <div>
+                            <label className="block font-mono text-[10px] uppercase font-bold text-dark mb-1">Votre Nom / Pseudo</label>
+                            <input
+                                type="text"
+                                required
+                                value={nickname}
+                                onChange={(e) => setNickname(e.target.value)}
+                                className="w-full bg-white border-4 border-dark rounded-xl px-4 py-3 font-mono text-sm focus:outline-none focus:border-accent transition-colors"
+                                placeholder="NonoBG"
+                            />
+                        </div>
+                    )}
+                    <div>
+                        <label className="block font-mono text-[10px] uppercase font-bold text-dark mb-1">Votre mot de passe</label>
+                        <div className="relative">
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                required
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="w-full bg-white border-4 border-dark rounded-xl px-4 py-3 font-mono text-sm focus:outline-none focus:border-accent transition-colors pr-12"
+                                placeholder="********"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-dark/40 hover:text-accent transition-colors"
+                            >
+                                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                            </button>
+                        </div>
+                    </div>
+
+                    {!isLogin && (
+                        <div>
+                            <label className="block font-mono text-[10px] uppercase font-bold text-dark mb-1">Confirmez le mot de passe</label>
+                            <div className="relative">
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    required
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    className="w-full bg-white border-4 border-dark rounded-xl px-4 py-3 font-mono text-sm focus:outline-none focus:border-accent transition-colors pr-12"
+                                    placeholder="********"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-dark/40 hover:text-accent transition-colors"
+                                >
+                                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {error && (
+                        <div className="bg-accent/10 border-2 border-accent p-3 rounded-lg font-mono text-[10px] text-accent uppercase font-bold">
+                            Error: {error}
+                        </div>
+                    )}
+
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full bg-dark text-white py-4 rounded-xl font-sans font-black uppercase tracking-widest hover:bg-accent transition-colors disabled:opacity-50"
+                    >
+                        {loading ? 'Traitement...' : isLogin ? 'Démarrer la session' : 'Créer le profil'}
+                    </button>
+                </form>
+
+                <button
+                    onClick={() => setIsLogin(!isLogin)}
+                    className="w-full mt-6 font-mono text-[10px] uppercase font-bold text-dark/50 hover:text-accent transition-colors"
+                >
+                    {isLogin ? "Pas de compte ? S'enregistrer" : "Déjà membre ? Se connecter"}
+                </button>
+            </div>
+        </div>
+    );
+}
+
+function Chat({ user }) {
+    const [isOpen, setIsOpen] = useState(false);
+    const [messages, setMessages] = useState([]);
+    const [newMessage, setNewMessage] = useState('');
+    const [loading, setLoading] = useState(false);
+    const scrollRef = useRef(null);
+
+    useEffect(() => {
+        if (!user) return;
+
+        // Charger les messages initiaux
+        const fetchMessages = async () => {
+            const { data, error } = await supabase
+                .from('messages')
+                .select('*')
+                .order('created_at', { ascending: true })
+                .limit(50);
+
+            if (data) setMessages(data);
+            if (error) console.error('Error fetching messages:', error);
+        };
+
+        fetchMessages();
+
+        // S'abonner aux nouveaux messages
+        const channel = supabase
+            .channel('public:messages')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
+                setMessages((prev) => [...prev, payload.new]);
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [user]);
+
+    useEffect(() => {
+        if (scrollRef.current) {
+            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        }
+    }, [messages, isOpen]);
+
+    const handleSendMessage = async (e) => {
+        e.preventDefault();
+        if (!newMessage.trim() || !user) return;
+
+        setLoading(true);
+        const { error } = await supabase.from('messages').insert([
+            {
+                content: newMessage,
+                user_id: user.id,
+                nickname: user.user_metadata?.nickname || user.email.split('@')[0]
+            }
+        ]);
+
+        if (error) {
+            console.error('Error sending message:', error);
+            alert('Erreur lors de l\'envoi du message.');
+        } else {
+            setNewMessage('');
+        }
+        setLoading(false);
+    };
+
+    if (!user) return null;
+
+    return (
+        <div className="fixed bottom-6 right-6 z-[999999]">
+            {/* Toggle Button */}
+            {!isOpen && (
+                <button
+                    onClick={() => setIsOpen(true)}
+                    className="w-16 h-16 bg-dark text-accent rounded-full border-4 border-accent shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center hover:scale-110 transition-transform animate-bounce hover:animate-none"
+                >
+                    <MessageSquare size={32} strokeWidth={3} />
+                </button>
+            )}
+
+            {/* Chat Window */}
+            {isOpen && (
+                <div className="w-80 md:w-96 h-[500px] bg-dark border-4 border-accent rounded-3xl shadow-[15px_15px_0px_0px_rgba(230,59,46,0.5)] flex flex-col overflow-hidden animate-in slide-in-from-bottom-5 duration-300">
+                    {/* Header */}
+                    <div className="bg-accent p-4 flex justify-between items-center border-b-4 border-dark">
+                        <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                            <h3 className="font-mono text-[10px] md:text-xs font-black uppercase tracking-widest text-white italic">
+                                Canal privé des éculés
+                            </h3>
+                        </div>
+                        <button onClick={() => setIsOpen(false)} className="text-white hover:rotate-90 transition-transform">
+                            <X size={20} strokeWidth={4} />
+                        </button>
+                    </div>
+
+                    {/* Messages Area */}
+                    <div
+                        ref={scrollRef}
+                        className="flex-1 overflow-y-auto p-4 space-y-4 font-mono scrollbar-hide bg-[#0a0a0a]"
+                    >
+                        {messages.length === 0 ? (
+                            <div className="text-accent/30 text-[10px] uppercase text-center mt-20 font-bold">
+                                --- Transmission_En_Attente ---
+                            </div>
+                        ) : (
+                            messages.map((msg, i) => (
+                                <div key={msg.id || i} className={`flex flex-col ${msg.user_id === user.id ? 'items-end' : 'items-start'}`}>
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span className="text-[10px] font-black uppercase text-accent">{msg.nickname}</span>
+                                        <span className="text-[8px] text-white/20 uppercase">[{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}]</span>
+                                    </div>
+                                    <div className={`px-3 py-2 rounded-xl text-xs max-w-[85%] border-2 ${msg.user_id === user.id
+                                        ? 'bg-accent/10 border-accent text-white rounded-tr-none'
+                                        : 'bg-white/5 border-white/20 text-white/90 rounded-tl-none'
+                                        }`}>
+                                        {msg.content}
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+
+                    {/* Input Area */}
+                    <form onSubmit={handleSendMessage} className="p-4 bg-dark border-t-4 border-accent/20 flex gap-2">
+                        <input
+                            type="text"
+                            value={newMessage}
+                            onChange={(e) => setNewMessage(e.target.value)}
+                            placeholder="Un message pour l'équipage ?"
+                            className="flex-1 bg-white/5 border-2 border-white/10 rounded-lg px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-accent transition-colors"
+                        />
+                        <button
+                            type="submit"
+                            disabled={loading || !newMessage.trim()}
+                            className="w-10 h-10 bg-accent text-white rounded-lg flex items-center justify-center hover:bg-white hover:text-accent transition-all disabled:opacity-30"
+                        >
+                            <Send size={18} strokeWidth={3} />
+                        </button>
+                    </form>
+                </div>
+            )}
+        </div>
+    );
+}
+
+function RoutePopup({ onClose }) {
+    const popupRef = useRef(null);
+
+    const stops = [
+        { x: 100, y: 200, name: "Bordeaux", desc: "Start" },
+        { x: 260, y: 130, name: "Arcachon", desc: "La Dune" },
+        { x: 420, y: 250, name: "Mimizan", desc: "Landes" },
+        { x: 580, y: 140, name: "Hendaye", desc: "Border" },
+        { x: 720, y: 230, name: "San Sebastián", desc: "Goal", final: true }
+    ];
+
+    return (
+        <div
+            className="fixed inset-0 flex items-center justify-center p-4 md:p-6"
+            style={{ zIndex: 9999999, backgroundColor: 'rgba(0,0,0,0.96)', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
+            onClick={onClose}
+        >
+            <div
+                ref={popupRef}
+                className="w-full max-w-4xl rounded-[2.5rem] border-[8px] border-[#111111] p-6 md:p-10 relative shadow-[25px_25px_0px_0px_#E63B2E] my-auto overflow-hidden bg-[#F5F3EE]"
+                style={{ opacity: 1, display: 'flex', flexDirection: 'column' }}
+                onClick={(e) => e.stopPropagation()}
+            >
+                {/* Close Button */}
+                <button
+                    onClick={onClose}
+                    className="absolute top-4 right-4 w-12 h-12 bg-[#E63B2E] text-white rounded-full flex items-center justify-center hover:scale-110 transition-transform z-[1000] border-[3px] border-[#111111]"
+                >
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+
+                {/* Header Section */}
+                <div className="flex flex-col md:flex-row justify-between items-baseline mb-8 border-b-[6px] border-[#111111] pb-4">
+                    <h2 className="font-sans font-black text-5xl md:text-7xl uppercase tracking-tighter text-[#111111] italic">ROADBOOK</h2>
+                    <div className="bg-[#111111] text-[#E63B2E] px-4 py-1 font-mono font-bold text-sm uppercase tracking-widest border-[3px] border-[#E63B2E]">
+                        MISSION_26
+                    </div>
+                </div>
+
+                {/* Map Display */}
+                <div className="relative w-full bg-white rounded-3xl border-[6px] border-[#111111] p-4 md:p-8 mb-8 overflow-visible">
+                    <svg viewBox="0 0 800 350" className="w-full h-auto overflow-visible" style={{ minHeight: '220px' }}>
+                        <path
+                            d="M 100 200 C 150 110, 200 110, 260 130 S 350 280, 420 250 S 520 110, 580 140 S 650 260, 720 230"
+                            fill="none"
+                            stroke="#E63B2E"
+                            strokeWidth="24"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        />
+
+                        {stops.map((stop, i) => (
+                            <g key={i}>
+                                <circle cx={stop.x} cy={stop.y} r="22" fill="#111111" />
+                                <circle cx={stop.x} cy={stop.y} r="10" fill={stop.final ? "#E63B2E" : "#F5F3EE"} />
+
+                                <text
+                                    x={stop.x}
+                                    y={stop.y + 55}
+                                    textAnchor="middle"
+                                    fill="#111111"
+                                    style={{
+                                        fontFamily: '"Space Grotesk", sans-serif',
+                                        fontWeight: 900,
+                                        fontSize: '20px',
+                                        textTransform: 'uppercase'
+                                    }}
+                                >
+                                    {stop.name}
+                                </text>
+                                <text
+                                    x={stop.x}
+                                    y={stop.y + 75}
+                                    textAnchor="middle"
+                                    fill="#E63B2E"
+                                    style={{
+                                        fontFamily: 'monospace',
+                                        fontWeight: 700,
+                                        fontSize: '12px',
+                                        textTransform: 'uppercase'
+                                    }}
+                                >
+                                    {stop.desc}
+                                </text>
+                            </g>
+                        ))}
+                    </svg>
+                </div>
+
+                {/* Stats Grid */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 w-full">
+                    {[
+                        { l: "DIST.", v: "240KM" },
+                        { l: "ELEV.", v: "+1200M" },
+                        { l: "SURF.", v: "ASPHALTE" },
+                        { l: "ETAT", v: "PRÊT" }
+                    ].map((s, i) => (
+                        <div key={i} className="bg-[#111111] p-3 border-l-4 border-[#E63B2E]">
+                            <p className="text-[#E63B2E] font-mono text-[10px] font-bold uppercase">{s.l}</p>
+                            <p className="text-white font-sans font-black text-lg uppercase">{s.v}</p>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function Hero({ onOpenRoute }) {
+    const containerRef = useRef(null);
+
+    useEffect(() => {
+        const ctx = gsap.context(() => {
+            gsap.from('.hero-text', {
+                y: 40,
+                opacity: 0,
+                duration: 1,
+                stagger: 0.08,
+                ease: 'power3.out',
+                delay: 0.2
+            });
+            gsap.from('.hero-cta', {
+                y: 40,
+                opacity: 0,
+                duration: 1,
+                ease: 'power3.out',
+                delay: 0.6
+            });
+        }, containerRef);
+        return () => ctx.revert();
+    }, []);
+
+    return (
+        <section ref={containerRef} className="relative h-[100dvh] w-full overflow-hidden flex flex-col justify-end pb-24 px-6 md:px-16" id="hero">
+            <img
+                src="https://images.unsplash.com/photo-1619337491481-de0b69b2050d?q=80&w=2535&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                alt="Baie de San Sebastian"
+                className="absolute inset-0 w-full h-full object-cover -z-20 transform scale-105"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-dark via-dark/70 to-dark/20 -z-10"></div>
+
+            <div className="max-w-4xl z-10 text-primary">
+                <h1 className="flex flex-col gap-2 relative">
+                    <span className="hero-text font-sans font-extrabold pb-2 text-5xl md:text-7xl lg:text-8xl tracking-tighter uppercase leading-none">
+                        Conquérir la
+                    </span>
+                    <span className="hero-text font-serif italic text-[5rem] md:text-[8rem] lg:text-[10rem] leading-none mb-6 text-primary flex items-end gap-6">
+                        <span className="block h-[2px] w-24 bg-accent mb-[2rem] md:mb-[3rem]"></span>
+                        Distance.
+                    </span>
+                </h1>
+                <p className="hero-text mt-8 text-primary/80 font-mono text-base md:text-lg max-w-lg mb-12 border-l-2 border-accent pl-4">
+                    De Bordeaux à San Sébastien : la précision brute d'un effort collectif. Notre trip 2026.
+                </p>
+                <button onClick={onOpenRoute} className="hero-cta btn-magnetic bg-accent text-white px-8 py-4 rounded-full font-sans font-bold text-lg inline-flex items-center gap-3">
+                    Explorer l'Itinéraire
+                </button>
+            </div>
+        </section>
+    );
+}
+
+function DiagnosticShuffler() {
+    const [cards, setCards] = useState([
+        { id: 1, stop: "Bordeaux", desc: "Coordonnées de départ : La belle endormie s'éveille." },
+        { id: 2, stop: "Les Landes", desc: "Le désert de pins : Vitesse et endurance linéaire." },
+        { id: 3, stop: "San Sébastien", desc: "L'arrivée : La récompense basque. Système désactivé." }
+    ]);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setCards(prev => {
+                const newCards = [...prev];
+                const last = newCards.pop();
+                newCards.unshift(last);
+                return newCards;
+            });
+        }, 3000);
+        return () => clearInterval(interval);
+    }, []);
+
+    return (
+        <div className="relative h-64 w-full flex items-center justify-center">
+            {cards.map((card, index) => {
+                const isActive = index === 0;
+                const opacity = isActive ? 1 : Math.max(0, 1 - (index * 0.4));
+                const yOffset = index * 24;
+                const scale = 1 - (index * 0.06);
+                const zIndex = 30 - index;
+                return (
+                    <div
+                        key={card.id}
+                        className="absolute right-0 left-0 mx-auto w-full p-6 bg-background rounded-[2rem] border-2 border-dark shadow-2xl transition-all duration-[800ms]"
+                        style={{
+                            transform: `translateY(${yOffset}px) scale(${scale})`,
+                            opacity,
+                            zIndex,
+                            transitionTimingFunction: 'cubic-bezier(0.34, 1.56, 0.64, 1)'
+                        }}
+                    >
+                        <h4 className="font-sans font-bold text-xl uppercase tracking-widest">{card.stop}</h4>
+                        <p className="font-mono text-sm text-dark/80 mt-2">{card.desc}</p>
+                    </div>
+                );
+            })}
+        </div>
+    );
+}
+
+function TelemetryTypewriter() {
+    const messages = [
+        "INITIALISATION...",
+        "DATE DE DÉPART : MAI 2026",
+        "POINTEUR : BORDEAUX V.R",
+        "OBJECTIF : SAN SÉBASTIEN",
+        "MÉTÉO PRÉVUE : INCERTAINE",
+        "PUISSANCE : MAXIMALE"
+    ];
+    const [text, setText] = useState("");
+    const [msgIdx, setMsgIdx] = useState(0);
+    const [charIdx, setCharIdx] = useState(0);
+
+    useEffect(() => {
+        if (msgIdx >= messages.length) {
+            setMsgIdx(0);
+            return;
+        }
+
+        if (charIdx < messages[msgIdx].length) {
+            const timeout = setTimeout(() => {
+                setText(prev => prev + messages[msgIdx][charIdx]);
+                setCharIdx(c => c + 1);
+            }, 40);
+            return () => clearTimeout(timeout);
+        } else {
+            const timeout = setTimeout(() => {
+                setCharIdx(0);
+                setMsgIdx(m => m + 1);
+                setText("");
+            }, 2500);
+            return () => clearTimeout(timeout);
+        }
+    }, [charIdx, msgIdx, messages.length]);
+
+    return (
+        <div className="w-full bg-dark text-primary p-6 rounded-[2rem] h-64 flex flex-col justify-between font-mono shadow-2xl relative overflow-hidden border-2 border-transparent">
+            <div className="flex items-center gap-3">
+                <div className="w-3 h-3 rounded-full bg-accent animate-pulse"></div>
+                <span className="text-xs tracking-widest text-accent font-bold uppercase">Flux en direct</span>
+            </div>
+            <div className="mt-6 flex-1 text-sm uppercase leading-relaxed text-primary/80">
+                <span className="text-primary font-bold">{'>'} {text}</span>
+                <span className="animate-ping inline-block w-2 ml-1 h-4 bg-accent align-middle relative top-[-1px]"></span>
+            </div>
+        </div>
+    );
+}
+
+function CursorProtocolScheduler() {
+    const containerRef = useRef(null);
+    const cursorRef = useRef(null);
+    const [activeDay, setActiveDay] = useState(null);
+
+    useEffect(() => {
+        const ctx = gsap.context(() => {
+            const tl = gsap.timeline({ repeat: -1, repeatDelay: 0.5 });
+            tl.set(cursorRef.current, { x: 0, y: 0, opacity: 0 })
+                .to(cursorRef.current, { opacity: 1, duration: 0.2 })
+                .to(cursorRef.current, { x: 60, y: 70, duration: 1, ease: 'power2.inOut' })
+                .to(cursorRef.current, { scale: 0.9, duration: 0.1, onComplete: () => setActiveDay(3) })
+                .to(cursorRef.current, { scale: 1, duration: 0.1 })
+                .to(cursorRef.current, { x: 180, y: 110, duration: 1, ease: 'power2.inOut', delay: 0.5 })
+                .to(cursorRef.current, { scale: 0.9, duration: 0.1, onComplete: () => setActiveDay(9) })
+                .to(cursorRef.current, { scale: 1, duration: 0.1 })
+                .to(cursorRef.current, { opacity: 0, duration: 0.3, delay: 0.5, onComplete: () => setActiveDay(null) });
+        }, containerRef);
+        return () => ctx.revert();
+    }, []);
+
+    return (
+        <div ref={containerRef} className="w-full h-64 bg-background border-2 border-dark p-6 rounded-[2rem] relative flex flex-col shadow-2xl overflow-hidden">
+            <h4 className="font-sans font-bold text-xl text-dark mb-4 uppercase tracking-widest">Escouade</h4>
+            <div className="grid grid-cols-7 gap-1 text-center font-mono text-xs flex-1">
+                {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map(day => (
+                    <div key={day} className="text-dark/40 font-bold mb-2">{day}</div>
+                ))}
+                {Array.from({ length: 14 }).map((_, i) => (
+                    <div
+                        key={i}
+                        className={`flex items-center justify-center rounded-lg border-2 transition-colors duration-300 font-bold ${activeDay === i ? 'bg-accent text-white border-accent' : 'border-transparent text-dark/80 bg-dark/5'}`}
+                    >
+                        {i + 1}
+                    </div>
+                ))}
+            </div>
+            <svg ref={cursorRef} className="absolute left-6 top-8 w-7 h-7 z-10 drop-shadow-lg text-dark z-50 pointer-events-none transition-transform" viewBox="0 0 24 24" fill="currentColor">
+                <path fill="currentColor" d="M11.96 0L24 24L11.96 16.66L0 24L11.96 0Z" stroke="white" strokeWidth="1.5" />
+            </svg>
+        </div>
+    );
+}
+
+function Features() {
+    const containerRef = useRef(null);
+
+    useEffect(() => {
+        const ctx = gsap.context(() => {
+            gsap.from('.feature-card', {
+                scrollTrigger: {
+                    trigger: containerRef.current,
+                    start: 'top 70%',
+                },
+                y: 80,
+                opacity: 0,
+                duration: 1,
+                stagger: 0.2,
+                ease: 'power3.out'
+            });
+        }, containerRef);
+        return () => ctx.revert();
+    }, []);
+
+    return (
+        <section ref={containerRef} className="py-32 px-6 md:px-16 max-w-7xl mx-auto w-full bg-background" id="features">
+            <h2 className="text-sm font-mono tracking-widest uppercase mb-16 text-accent flex items-center gap-4 font-bold">
+                <span className="w-16 h-[2px] bg-accent"></span>
+                Paramètres de mission
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-12 lg:gap-8">
+                <div className="feature-card flex flex-col gap-8">
+                    <DiagnosticShuffler />
+                    <div>
+                        <h3 className="font-sans font-extrabold text-3xl text-dark uppercase tracking-tight mb-2">L'Itinéraire</h3>
+                        <p className="font-mono text-sm text-dark/70">Projection géographique des étapes. Cap au sud-ouest vers la frontière.</p>
+                    </div>
+                </div>
+                <div className="feature-card flex flex-col gap-8 md:translate-y-16">
+                    <TelemetryTypewriter />
+                    <div>
+                        <h3 className="font-sans font-extrabold text-3xl text-dark uppercase tracking-tight mb-2">Les Dates</h3>
+                        <p className="font-mono text-sm text-dark/70">Logistique temporelle. Mai 2026. La fenêtre de tir est confirmée.</p>
+                    </div>
+                </div>
+                <div className="feature-card flex flex-col gap-8">
+                    <CursorProtocolScheduler />
+                    <div>
+                        <h3 className="font-sans font-extrabold text-3xl text-dark uppercase tracking-tight mb-2">L'Équipage</h3>
+                        <p className="font-mono text-sm text-dark/70">Les éculés. Force de frappe coordonnée. 100% énergie cinétique.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    );
+}
+
+function Philosophy() {
+    const comp = useRef(null);
+
+    useEffect(() => {
+        const ctx = gsap.context(() => {
+            gsap.from('.philo-statement-sub', {
+                scrollTrigger: { trigger: comp.current, start: 'top 70%' },
+                opacity: 0,
+                y: 30,
+                duration: 1.2,
+                ease: 'power3.out'
+            });
+            gsap.from('.philo-statement-main .word', {
+                scrollTrigger: { trigger: comp.current, start: 'top 60%' },
+                opacity: 0,
+                y: 40,
+                duration: 1.2,
+                ease: 'power4.out',
+                stagger: 0.15,
+                delay: 0.2
+            });
+        }, comp);
+        return () => ctx.revert();
+    }, []);
+
+    return (
+        <section ref={comp} className="relative w-full py-48 px-6 md:px-16 overflow-hidden flex flex-col justify-center items-center text-center md:text-left md:items-start" id="philosophie">
+            <img src="https://images.unsplash.com/photo-1632248812630-1281b9f5c118?q=80&w=1674&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" className="absolute inset-0 w-full h-full object-cover -z-20 transform scale-105" alt="Ocean waves" />
+            <div className="absolute inset-0 bg-dark/60 -z-10"></div>
+
+            <div className="max-w-5xl z-10">
+                <h3 className="philo-statement-sub font-mono text-lg md:text-xl text-primary/60 mb-10 max-w-2xl leading-relaxed">
+                    La plupart des voyages se concentrent sur : le confort, l'absence de friction, le repos passif.
+                </h3>
+                <h2 className="philo-statement-main font-serif italic text-6xl md:text-8xl lg:text-[8rem] leading-[1.1] text-primary">
+                    <span className="block word">Nous nous</span>
+                    <span className="block word">concentrons sur :</span>
+                    <span className="block mt-4 word text-accent not-italic font-sans font-extrabold uppercase tracking-tighter underline decoration-8 underline-offset-8">L'effort.</span>
+                </h2>
+            </div>
+        </section>
+    );
+}
+
+function Protocol() {
+    const containerRef = useRef(null);
+
+    useEffect(() => {
+        const ctx = gsap.context(() => {
+            const cards = gsap.utils.toArray('.protocol-card');
+
+            cards.forEach((card, i) => {
+                if (i < cards.length - 1) {
+                    ScrollTrigger.create({
+                        trigger: card,
+                        start: 'top top',
+                        endTrigger: '.protocol-end',
+                        end: 'bottom bottom',
+                        pin: true,
+                        pinSpacing: false,
+                    });
+
+                    gsap.to(card, {
+                        scale: 0.92,
+                        opacity: 0.4,
+                        filter: 'blur(10px)',
+                        scrollTrigger: {
+                            trigger: cards[i + 1],
+                            start: 'top bottom',
+                            end: 'top top',
+                            scrub: true,
+                        }
+                    });
+                }
+            });
+        }, containerRef);
+        return () => ctx.revert();
+    }, []);
+
+    const steps = [
+        {
+            num: "01",
+            title: "Préparation",
+            desc: "Analyse des itinéraires. Optimisation du matériel. Conditionnement mental."
+        },
+        {
+            num: "02",
+            title: "L'Étape",
+            desc: "Exécution du plan. Combattre le vent, avaler l'asphalte, ignorer la douleur."
+        },
+        {
+            num: "03",
+            title: "Célébration",
+            desc: "San Sébastien. Désactivation des protocoles d'effort. Récupération Basque."
+        }
+    ];
+
+    return (
+        <div ref={containerRef} className="bg-background relative" id="protocole">
+            {steps.map((step, idx) => (
+                <section key={idx} className="protocol-card h-[100dvh] w-full flex flex-col md:flex-row items-center justify-center p-6 md:p-16 border-b-2 border-dark/5 bg-background text-dark relative shadow-2xl z-20 overflow-hidden">
+                    <div className="absolute top-8 left-6 md:top-12 md:left-16 font-mono text-2xl tracking-widest opacity-20 font-bold uppercase z-0">
+                        Phase_{step.num}
+                    </div>
+                    <div className="max-w-6xl w-full flex flex-col md:flex-row gap-8 md:gap-24 items-center z-10 relative">
+                        <div className="w-48 h-48 md:w-80 md:h-80 flex-shrink-0 text-accent relative flex items-center justify-center">
+                            {idx === 0 && (
+                                <svg viewBox="0 0 100 100" className="w-full h-full animate-[spin_20s_linear_infinite]" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                    <circle cx="50" cy="50" r="45" strokeDasharray="4 8" />
+                                    <circle cx="50" cy="50" r="30" strokeDasharray="10 5" className="animate-[spin_10s_linear_infinite_reverse]" origin="50 50" />
+                                    <path d="M50 5 L50 95 M5 50 L95 50" opacity="0.3" />
+                                </svg>
+                            )}
+                            {idx === 1 && (
+                                <svg viewBox="0 0 100 100" className="w-full h-full" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <g className="animate-pulse">
+                                        <path d="M10 50 Q 25 10, 50 50 T 90 50" strokeDasharray="200" strokeDashoffset="0" />
+                                        <path d="M10 50 Q 25 90, 50 50 T 90 50" opacity="0.4" />
+                                    </g>
+                                    <circle cx="50" cy="50" r="4" fill="currentColor" />
+                                </svg>
+                            )}
+                            {idx === 2 && (
+                                <svg viewBox="0 0 100 100" className="w-full h-full" fill="currentColor">
+                                    <polygon points="50,15 61,35 85,38 68,54 72,75 50,65 28,75 32,54 15,38 39,35" className="animate-[pulse_4s_ease-in-out_infinite] origin-center" opacity="0.8" />
+                                    <circle cx="50" cy="50" r="48" fill="none" stroke="currentColor" strokeWidth="1" strokeDasharray="2 4" className="animate-[spin_30s_linear_infinite]" origin="50 50" />
+                                </svg>
+                            )}
+                        </div>
+                        <div className="text-center md:text-left">
+                            <h2 className="font-sans font-black uppercase text-5xl md:text-7xl lg:text-[7rem] mb-6 tracking-tighter leading-none">{step.title}</h2>
+                            <p className="font-mono text-dark/70 text-lg md:text-2xl max-w-xl border-l-4 border-accent pl-6">{step.desc}</p>
+                        </div>
+                    </div>
+                </section>
+            ))}
+            <div className="protocol-end h-px w-full"></div>
+        </div>
+    );
+}
+
+function Footer() {
+    return (
+        <footer className="text-primary pt-32 pb-16 px-6 md:px-16 rounded-t-[4rem] flex flex-col items-center text-center relative z-50 overflow-hidden mt-[-2rem]">
+            <img src="https://images.unsplash.com/photo-1493564738392-d148cfbd6eda?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" className="absolute inset-0 w-full h-full object-cover -z-20 scale-105" alt="Night landscape" />
+            <div className="absolute inset-0 bg-dark/80 -z-10"></div>
+            <div className="w-full max-w-6xl flex flex-col md:flex-row justify-between items-start gap-12 text-left mb-24 z-10">
+                <div>
+                    <h2 className="font-sans font-extrabold text-4xl mb-3 tracking-tighter uppercase">Les Éculés</h2>
+                    <p className="font-mono text-sm text-primary/60 border-l-2 border-accent pl-4">Notre trip 2026. Bordeaux - San Sébastien.</p>
+                </div>
+                <div className="flex gap-16 font-mono text-sm uppercase font-bold tracking-widest">
+                    <div className="flex flex-col gap-6">
+                        <a href="#features" className="hover:text-accent transition-colors">Itinéraire</a>
+                        <a href="#features" className="hover:text-accent transition-colors">Dates</a>
+                    </div>
+                    <div className="flex flex-col gap-6">
+                        <a href="#features" className="hover:text-accent transition-colors">Équipage</a>
+                        <a href="#protocole" className="hover:text-accent transition-colors">Protocole</a>
+                    </div>
+                </div>
+            </div>
+            <div className="w-full max-w-6xl border-t-2 border-primary/10 pt-8 flex flex-col md:flex-row items-center justify-between font-mono text-xs gap-6 z-10">
+                <span className="text-primary/40 font-bold tracking-widest uppercase align-middle">© 2026 Les Éculés</span>
+            </div>
+        </footer>
+    );
+}
+
+function App() {
+    const [isRouteOpen, setIsRouteOpen] = useState(false);
+    const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+    const [user, setUser] = useState(null);
+
+    useEffect(() => {
+        // Obtenir la session initiale
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            setUser(session?.user ?? null);
+        });
+
+        // Écouter les changements d'état
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            setUser(session?.user ?? null);
+        });
+
+        return () => subscription.unsubscribe();
+    }, []);
+
+    return (
+        <>
+            <svg className="noise-overlay" style={{ display: 'none' }}>
+                <filter id="noiseFilter">
+                    <feTurbulence type="fractalNoise" baseFrequency="0.6" numOctaves="3" stitchTiles="stitch" />
+                </filter>
+            </svg>
+            <div className="noise-overlay" style={{ filter: 'url(#noiseFilter)', display: 'block' }}></div>
+
+            <Navbar user={user} onJoinClick={() => setIsAuthModalOpen(true)} />
+            <Hero onOpenRoute={() => setIsRouteOpen(true)} />
+            <Features />
+            <Philosophy />
+            <Protocol />
+            <Footer />
+
+            <Chat user={user} />
+
+            {isRouteOpen && <RoutePopup onClose={() => setIsRouteOpen(false)} />}
+            {isAuthModalOpen && <AuthModal onClose={() => setIsAuthModalOpen(false)} />}
+        </>
+    );
+}
+
+export default App;
