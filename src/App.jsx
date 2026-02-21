@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { supabase } from './lib/supabase';
-import { Eye, EyeOff, Send, MessageSquare, X } from 'lucide-react';
+import { Eye, EyeOff, Send, MessageSquare, X, Bike } from 'lucide-react';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -262,6 +262,7 @@ function Chat({ user }) {
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
     const [loading, setLoading] = useState(false);
+    const [onlineCount, setOnlineCount] = useState(0);
     const scrollRef = useRef(null);
 
     useEffect(() => {
@@ -289,8 +290,33 @@ function Chat({ user }) {
             })
             .subscribe();
 
+        // Système de présence (pour voir qui est en ligne)
+        const presenceChannel = supabase.channel('room_presence', {
+            config: {
+                presence: {
+                    key: user.id,
+                },
+            },
+        });
+
+        presenceChannel
+            .on('presence', { event: 'sync' }, () => {
+                const newState = presenceChannel.presenceState();
+                const members = Object.keys(newState).length;
+                // On affiche le nombre d'autres personnes (donc -1 soi-même)
+                setOnlineCount(Math.max(0, members - 1));
+            })
+            .subscribe(async (status) => {
+                if (status === 'SUBSCRIBED') {
+                    await presenceChannel.track({
+                        online_at: new Date().toISOString(),
+                    });
+                }
+            });
+
         return () => {
             supabase.removeChannel(channel);
+            supabase.removeChannel(presenceChannel);
         };
     }, [user]);
 
@@ -330,9 +356,17 @@ function Chat({ user }) {
             {!isOpen && (
                 <button
                     onClick={() => setIsOpen(true)}
-                    className="w-16 h-16 bg-dark text-accent rounded-full border-4 border-accent shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center hover:scale-110 transition-transform animate-bounce hover:animate-none"
+                    className="relative w-16 h-16 bg-dark text-[#4ADE80] rounded-full border-4 border-[#4ADE80] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center hover:scale-110 transition-transform animate-bounce hover:animate-none"
+                    title={`${onlineCount} autre(s) cycliste(s) en ligne`}
                 >
-                    <MessageSquare size={32} strokeWidth={3} />
+                    <Bike size={32} strokeWidth={2.5} />
+
+                    {/* Badge de présence */}
+                    {onlineCount > 0 && (
+                        <div className="absolute -top-2 -right-2 w-8 h-8 bg-[#4ADE80] text-dark rounded-full border-4 border-dark flex items-center justify-center font-mono text-xs font-black shadow-lg">
+                            {onlineCount}
+                        </div>
+                    )}
                 </button>
             )}
 
