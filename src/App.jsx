@@ -367,12 +367,17 @@ function Chat({ user }) {
                 .from('chat-files')
                 .upload(filePath, file);
 
-            if (uploadError) throw uploadError;
+            if (uploadError) {
+                alert(`Erreur de stockage : ${uploadError.message}`);
+                throw uploadError;
+            }
 
             // 3. Récupérer l'URL publique
-            const { data: { publicUrl } } = supabase.storage
+            const { data } = supabase.storage
                 .from('chat-files')
                 .getPublicUrl(filePath);
+
+            const publicUrl = data.publicUrl;
 
             // 4. Envoyer le message avec le lien du fichier
             const { error: msgError } = await supabase.from('messages').insert([
@@ -384,11 +389,13 @@ function Chat({ user }) {
                 }
             ]);
 
-            if (msgError) throw msgError;
+            if (msgError) {
+                alert(`Erreur base de données : ${msgError.message}`);
+                throw msgError;
+            }
 
         } catch (error) {
             console.error('Erreur upload:', error);
-            alert('Erreur lors de l\'envoi du fichier.');
         } finally {
             setUploading(false);
             if (fileInputRef.current) fileInputRef.current.value = '';
