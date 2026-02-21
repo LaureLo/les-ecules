@@ -263,6 +263,7 @@ function Chat({ user }) {
     const [newMessage, setNewMessage] = useState('');
     const [loading, setLoading] = useState(false);
     const [onlineCount, setOnlineCount] = useState(0);
+    const [onlineUsers, setOnlineUsers] = useState([]);
     const [uploading, setUploading] = useState(false);
     const scrollRef = useRef(null);
     const fileInputRef = useRef(null);
@@ -304,13 +305,25 @@ function Chat({ user }) {
         presenceChannel
             .on('presence', { event: 'sync' }, () => {
                 const newState = presenceChannel.presenceState();
-                const members = Object.keys(newState).length;
-                // On affiche le nombre d'autres personnes (donc -1 soi-même)
-                setOnlineCount(Math.max(0, members - 1));
+
+                // Extraire tous les profils connectés
+                const allPresences = Object.values(newState).flat();
+
+                // Filtrer pour ne garder que les AUTRES (pas soi-même)
+                const otherUsers = allPresences
+                    .filter(p => p.user_id !== user.id)
+                    .map(p => p.nickname || "Anonyme");
+
+                // Supprimer les doublons s'il y en a et mettre à jour
+                const uniqueOthers = [...new Set(otherUsers)];
+                setOnlineUsers(uniqueOthers);
+                setOnlineCount(uniqueOthers.length);
             })
             .subscribe(async (status) => {
                 if (status === 'SUBSCRIBED') {
                     await presenceChannel.track({
+                        user_id: user.id,
+                        nickname: user.user_metadata?.nickname || user.email.split('@')[0],
                         online_at: new Date().toISOString(),
                     });
                 }
@@ -449,20 +462,40 @@ function Chat({ user }) {
         <div className="fixed bottom-6 right-6 z-[999999]">
             {/* Toggle Button */}
             {!isOpen && (
-                <button
-                    onClick={() => setIsOpen(true)}
-                    className="relative w-16 h-16 bg-dark text-[#4ADE80] rounded-full border-4 border-[#4ADE80] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center hover:scale-110 transition-transform animate-bounce hover:animate-none"
-                    title={`${onlineCount} autre(s) cycliste(s) en ligne`}
-                >
-                    <Bike size={32} strokeWidth={2.5} />
-
-                    {/* Badge de présence */}
-                    {onlineCount > 0 && (
-                        <div className="absolute -top-2 -right-2 w-8 h-8 bg-[#4ADE80] text-dark rounded-full border-4 border-dark flex items-center justify-center font-mono text-xs font-black shadow-lg">
-                            {onlineCount}
+                <div className="group/presence relative">
+                    {/* Tooltip List */}
+                    {onlineUsers.length > 0 && (
+                        <div className="absolute bottom-full right-0 mb-4 opacity-0 group-hover/presence:opacity-100 transition-all duration-300 pointer-events-none translate-y-2 group-hover/presence:translate-y-0">
+                            <div className="bg-dark border-2 border-[#4ADE80] rounded-xl p-3 shadow-xl min-w-[120px]">
+                                <p className="text-[#4ADE80] font-mono text-[8px] uppercase font-black mb-2 border-b border-[#4ADE80]/20 pb-1">
+                                    En selle :
+                                </p>
+                                <div className="space-y-1">
+                                    {onlineUsers.map((name, i) => (
+                                        <div key={i} className="flex items-center gap-2">
+                                            <div className="w-1 h-1 bg-[#4ADE80] rounded-full" />
+                                            <span className="text-white font-mono text-[10px] uppercase font-bold">{name}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
                     )}
-                </button>
+
+                    <button
+                        onClick={() => setIsOpen(true)}
+                        className="relative w-16 h-16 bg-dark text-[#4ADE80] rounded-full border-4 border-[#4ADE80] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center hover:scale-110 transition-transform animate-bounce hover:animate-none"
+                    >
+                        <Bike size={32} strokeWidth={2.5} />
+
+                        {/* Badge de présence */}
+                        {onlineCount > 0 && (
+                            <div className="absolute -top-2 -right-2 w-8 h-8 bg-[#4ADE80] text-dark rounded-full border-4 border-dark flex items-center justify-center font-mono text-xs font-black shadow-lg">
+                                {onlineCount}
+                            </div>
+                        )}
+                    </button>
+                </div>
             )}
 
             {/* Chat Window */}
