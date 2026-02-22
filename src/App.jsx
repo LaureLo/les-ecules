@@ -1027,10 +1027,10 @@ function RoutePopup({ onClose }) {
 function HeroAccordion({ onOpenRoute }) {
     const [activeId, setActiveId] = useState(2026);
 
-    const trips = Array.from({ length: 11 }, (_, i) => {
-        const year = 2017 + i;
+    const trips = Array.from({ length: 10 }, (_, i) => {
+        const year = 2018 + i;
         const gradients = [
-            "from-[#FF5E5B] to-[#FF8A88]", "from-[#FFB52E] to-[#FFD57F]", "from-[#4ADE80] to-[#86E8A8]",
+            "from-[#FFB52E] to-[#FFD57F]", "from-[#4ADE80] to-[#86E8A8]",
             "from-[#38BDF8] to-[#83D6FB]", "from-[#A855F7] to-[#C98CF9]", "from-[#F472B6] to-[#F8A4D1]",
             "from-[#14B8A6] to-[#5EEAD9]", "from-[#F59E0B] to-[#FBCF74]", "from-[#8B5CF6] to-[#B393F8]",
             "from-[#111111] to-[#333333]", "from-[#E63B2E] to-[#9B2117]"
@@ -1057,9 +1057,7 @@ function HeroAccordion({ onOpenRoute }) {
                                             ? "url('https://images.unsplash.com/photo-1705591928686-024553bf5c6b?q=80&w=2637&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')"
                                             : year === 2018
                                                 ? "url('https://images.unsplash.com/photo-1570448402438-0ba254560be9?q=80&w=1710&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')"
-                                                : year === 2017
-                                                    ? "url('https://images.unsplash.com/photo-1724683193567-4a8fbf1cf26a?q=80&w=2511&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')"
-                                                    : null,
+                                                : null,
             gradient: gradients[i]
         };
     });
