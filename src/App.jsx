@@ -1057,7 +1057,9 @@ function HeroAccordion({ onOpenRoute }) {
                                             ? "url('https://images.unsplash.com/photo-1705591928686-024553bf5c6b?q=80&w=2637&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')"
                                             : year === 2018
                                                 ? "url('https://images.unsplash.com/photo-1570448402438-0ba254560be9?q=80&w=1710&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')"
-                                                : null,
+                                                : year === 2017
+                                                    ? "url('https://images.unsplash.com/photo-1724683193567-4a8fbf1cf26a?q=80&w=2511&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')"
+                                                    : null,
             gradient: gradients[i]
         };
     });
