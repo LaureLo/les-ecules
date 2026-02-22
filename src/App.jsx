@@ -273,7 +273,8 @@ function AuthModal({ onClose }) {
 }
 
 function ProfileModal({ user, onClose }) {
-    const [nickname, setNickname] = useState(user?.user_metadata?.nickname || '');
+    const currentNickname = user?.user_metadata?.nickname || user?.email?.split('@')[0] || '';
+    const [newNickname, setNewNickname] = useState('');
     const [role, setRole] = useState(user?.user_metadata?.role || '');
     const [bikeName, setBikeName] = useState(user?.user_metadata?.bike_name || '');
     const [password, setPassword] = useState('');
@@ -325,7 +326,7 @@ function ProfileModal({ user, onClose }) {
             // Update metadata
             const { error: metaError } = await supabase.auth.updateUser({
                 data: {
-                    nickname: nickname,
+                    nickname: newNickname.trim() !== '' ? newNickname.trim() : currentNickname,
                     role: role,
                     bike_name: bikeName,
                     avatar_url: avatarUrl
@@ -358,7 +359,7 @@ function ProfileModal({ user, onClose }) {
                     <X size={24} strokeWidth={4} />
                 </button>
 
-                <h2 className="font-sans font-black text-4xl uppercase tracking-tighter text-dark mb-6 italic">Profil Pilote</h2>
+                <h2 className="font-sans font-black text-4xl uppercase tracking-tighter text-dark mb-6 italic">Profil Éculé</h2>
 
                 <form onSubmit={handleSave} className="space-y-4">
                     {/* AVATAR */}
@@ -380,10 +381,16 @@ function ProfileModal({ user, onClose }) {
                         </div>
                     </div>
 
-                    {/* CHAMP PSEUDO */}
+                    {/* CHAMP PSEUDO ACTUEL */}
                     <div>
-                        <label className="block font-mono text-[10px] uppercase font-bold text-dark mb-1">Pseudo / Indicatif</label>
-                        <input type="text" value={nickname} onChange={e => setNickname(e.target.value)} required className="w-full bg-white border-4 border-dark rounded-xl px-4 py-3 font-mono text-sm focus:outline-none focus:border-accent transition-colors" />
+                        <label className="block font-mono text-[10px] uppercase font-bold text-dark mb-1">Pseudo / Indicatif actuel</label>
+                        <input type="text" value={currentNickname} disabled className="w-full bg-black/5 border-4 border-dark/20 text-dark/50 rounded-xl px-4 py-3 font-mono text-sm cursor-not-allowed" />
+                    </div>
+
+                    {/* NOUVEAU PSEUDO */}
+                    <div>
+                        <label className="block font-mono text-[10px] uppercase font-bold text-dark mb-1">Changer de pseudo (Optionnel)</label>
+                        <input type="text" value={newNickname} onChange={e => setNewNickname(e.target.value)} placeholder="Nouveau pseudo" className="w-full bg-white border-4 border-dark rounded-xl px-4 py-3 font-mono text-sm focus:outline-none focus:border-accent transition-colors" />
                     </div>
 
                     {/* CHAMP VÉLO */}
