@@ -881,7 +881,9 @@ function HeroAccordion({ onOpenRoute }) {
             title: year === 2026 ? "MISSION 26" : `Trip ${year}`,
             bg: year === 2026
                 ? "url('https://images.unsplash.com/photo-1619337491481-de0b69b2050d?q=80&w=2535&auto=format&fit=crop')"
-                : null,
+                : year === 2025
+                    ? "url('https://images.unsplash.com/photo-1549880181-56a44cf4a9a5?q=80&w=2070&auto=format&fit=crop')"
+                    : null,
             gradient: gradients[i]
         };
     });
