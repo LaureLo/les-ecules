@@ -390,28 +390,33 @@ function ProfileModal({ user, onClose }) {
                     {/* NOUVEAU PSEUDO */}
                     <div>
                         <label className="block font-mono text-[10px] uppercase font-bold text-dark mb-1">Changer de pseudo (Optionnel)</label>
-                        <input type="text" value={newNickname} onChange={e => setNewNickname(e.target.value)} placeholder="Nouveau pseudo" className="w-full bg-white border-4 border-dark rounded-xl px-4 py-3 font-mono text-sm focus:outline-none focus:border-accent transition-colors" />
+                        <input type="text" value={newNickname} onChange={e => setNewNickname(e.target.value)} placeholder="Nouveau pseudo" autoComplete="off" className="w-full bg-white border-4 border-dark rounded-xl px-4 py-3 font-mono text-sm focus:outline-none focus:border-accent transition-colors" />
                     </div>
 
                     {/* CHAMP VÉLO */}
                     <div>
                         <label className="block font-mono text-[10px] uppercase font-bold text-dark mb-1">Monture (Vélo)</label>
-                        <input type="text" value={bikeName} onChange={e => setBikeName(e.target.value)} placeholder="Ex: Gravel Triban RC520" className="w-full bg-white border-4 border-dark rounded-xl px-4 py-3 font-mono text-sm focus:outline-none focus:border-accent transition-colors" />
+                        <input type="text" value={bikeName} onChange={e => setBikeName(e.target.value)} placeholder="Ex: Gravel Triban RC520" autoComplete="off" className="w-full bg-white border-4 border-dark rounded-xl px-4 py-3 font-mono text-sm focus:outline-none focus:border-accent transition-colors" />
                     </div>
 
                     {/* CHAMP SPÉCIALITÉ */}
                     <div>
-                        <label className="block font-mono text-[10px] uppercase font-bold text-dark mb-1">Spécialité Escouade</label>
-                        <select value={role} onChange={e => setRole(e.target.value)} className="w-full bg-white border-4 border-dark rounded-xl px-4 py-3 font-mono text-sm focus:outline-none focus:border-accent transition-colors appearance-none cursor-pointer">
-                            <option value="">Sélectionner une spécialité</option>
-                            {roles.map(r => <option key={r} value={r}>{r}</option>)}
-                        </select>
+                        <label className="block font-mono text-[10px] uppercase font-bold text-dark mb-1">Rôle dans l'escouade</label>
+                        <div className="relative">
+                            <select value={role} onChange={e => setRole(e.target.value)} className="w-full bg-white border-4 border-dark rounded-xl px-4 py-3 font-mono text-sm focus:outline-none focus:border-accent transition-colors appearance-none cursor-pointer pr-10">
+                                <option value="">Sélectionner un rôle</option>
+                                {roles.map(r => <option key={r} value={r}>{r}</option>)}
+                            </select>
+                            <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-dark">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                            </div>
+                        </div>
                     </div>
 
                     {/* CHAMP MDP */}
                     <div>
                         <label className="block font-mono text-[10px] uppercase font-bold text-dark mb-1">Mot de passe (Laisser vide si inchangé)</label>
-                        <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Nouveau mot de passe" className="w-full bg-white border-4 border-dark rounded-xl px-4 py-3 font-mono text-sm focus:outline-none focus:border-accent transition-colors" />
+                        <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Nouveau mot de passe" autoComplete="new-password" className="w-full bg-white border-4 border-dark rounded-xl px-4 py-3 font-mono text-sm focus:outline-none focus:border-accent transition-colors" />
                     </div>
 
                     {error && <div className="bg-accent/10 border-2 border-accent p-3 rounded-lg font-mono text-[10px] text-accent uppercase font-bold">Erreur: {error}</div>}
