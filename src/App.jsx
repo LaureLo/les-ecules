@@ -3,6 +3,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { supabase } from './lib/supabase';
 import { Eye, EyeOff, Send, MessageSquare, X, Bike, Paperclip, Download, FileText, PlayCircle, Image as ImageIcon } from 'lucide-react';
+import createGlobe from 'cobe';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -89,6 +90,73 @@ function BicycleCursor() {
                 <circle cx="18.5" cy="17.5" r="3.5" />
                 <path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5V14l-3-3 4-3 2 3h2" />
             </svg>
+        </div>
+    );
+}
+
+function NextTripGlobe() {
+    const canvasRef = useRef();
+    const [marks, setMarks] = useState([]);
+
+    useEffect(() => {
+        let phi = 0;
+        let width = canvasRef.current.offsetWidth;
+        const globe = createGlobe(canvasRef.current, {
+            devicePixelRatio: 2,
+            width: width * 2,
+            height: width * 2,
+            phi: 0,
+            theta: 0.15,
+            dark: 1,
+            diffuse: 1.2,
+            mapSamples: 16000,
+            mapBrightness: 6,
+            baseColor: [1, 1, 1], // Inverted in dark mode
+            markerColor: [1, 0.36, 0.35], // Accent FF5E5B -> ~ [1, 0.36, 0.35]
+            glowColor: [0.1, 0.1, 0.1],
+            markers: [],
+            onRender: (state) => {
+                state.phi = phi;
+                phi += 0.015; // Un peu plus vite
+            },
+        });
+
+        // Spawn random '?' marks
+        const interval = setInterval(() => {
+            setMarks(prev => {
+                const newMark = {
+                    id: Date.now(),
+                    x: Math.random() * 80 + 10,
+                    y: Math.random() * 80 + 10
+                };
+                return [...prev.slice(-4), newMark];
+            });
+        }, 800);
+
+        return () => {
+            globe.destroy();
+            clearInterval(interval);
+        };
+    }, []);
+
+    return (
+        <div className="relative w-full aspect-square max-w-[600px] mx-auto flex items-center justify-center -mt-8">
+            <canvas
+                ref={canvasRef}
+                style={{ width: "100%", height: "100%", contain: "layout paint size" }}
+            />
+            {/* Random question marks overlay */}
+            <div className="absolute inset-0 pointer-events-none">
+                {marks.map(m => (
+                    <div
+                        key={m.id}
+                        className="absolute text-accent font-black font-serif text-4xl md:text-6xl animate-mud-fade drop-shadow-[0_0_15px_rgba(255,94,91,0.6)]"
+                        style={{ left: `${m.x}%`, top: `${m.y}%`, transform: 'translate(-50%, -50%)' }}
+                    >
+                        ?
+                    </div>
+                ))}
+            </div>
         </div>
     );
 }
@@ -965,7 +1033,7 @@ function HeroAccordion({ onOpenRoute }) {
         return {
             id: year,
             year: year,
-            title: year === 2026 ? "MISSION 26" : `Trip ${year}`,
+            title: year === 2026 ? "MISSION 26" : year === 2027 ? "Prochaine étape ?" : `Trip ${year}`,
             bg: year === 2026
                 ? "url('https://images.unsplash.com/photo-1619337491481-de0b69b2050d?q=80&w=2535&auto=format&fit=crop')"
                 : year === 2025
@@ -1010,7 +1078,7 @@ function HeroAccordion({ onOpenRoute }) {
                             style={trip.bg ? { backgroundImage: trip.bg } : {}}
                         />
                         {!trip.bg && (
-                            <div className={`absolute inset-0 bg-gradient-to-br ${trip.gradient} opacity-90`} />
+                            <div className={`absolute inset-0 bg-gradient-to-br ${trip.gradient} transition-opacity duration-1000 ${isActive && trip.id === 2027 ? 'opacity-0' : 'opacity-90'}`} />
                         )}
                         {/* Overlay to dim inactive */}
                         <div className={`absolute inset-0 bg-dark transition-opacity duration-700 ${isActive ? 'opacity-30 md:opacity-20' : 'opacity-60 group-hover:opacity-40'}`} />
@@ -1054,6 +1122,18 @@ function HeroAccordion({ onOpenRoute }) {
                                                 <button onClick={(e) => { e.stopPropagation(); onOpenRoute(); }} className="btn-magnetic bg-accent text-white px-5 py-3 md:px-8 md:py-4 rounded-full font-sans font-bold text-xs md:text-lg inline-flex items-center gap-3 hover:scale-105 transition-transform w-fit border-2 border-transparent hover:border-white shadow-xl">
                                                     Explorer l'Itinéraire
                                                 </button>
+                                            </div>
+                                        ) : trip.id === 2027 ? (
+                                            <div className="text-white z-10 mb-8 md:mb-16 flex flex-col md:flex-row items-center justify-between w-full h-full pb-8">
+                                                <div className="w-full md:w-1/2 flex items-center justify-center">
+                                                    <NextTripGlobe />
+                                                </div>
+                                                <div className="w-full md:w-1/2 flex items-center justify-center md:justify-start">
+                                                    <h2 className="font-sans font-black text-6xl md:text-7xl lg:text-[8rem] uppercase tracking-tighter italic text-center md:text-left drop-shadow-xl leading-[0.9]">
+                                                        Prochaine<br />
+                                                        <span className="text-accent underline decoration-4 underline-offset-8">Étape ?</span>
+                                                    </h2>
+                                                </div>
                                             </div>
                                         ) : (
                                             <div className="text-white z-10 mb-8 md:mb-16">
