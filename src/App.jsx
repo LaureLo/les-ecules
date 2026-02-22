@@ -6,81 +6,89 @@ import { Eye, EyeOff, Send, MessageSquare, X, Bike, Paperclip, Download, FileTex
 
 gsap.registerPlugin(ScrollTrigger);
 
-function TireTrackCursor() {
-    const [tracks, setTracks] = useState([]);
-    const lastPos = useRef({ x: -100, y: -100 });
-    const trackIdRef = useRef(0);
+function BicycleCursor() {
+    const cursorRef = useRef(null);
+    const pos = useRef({ x: -100, y: -100 });
+    const target = useRef({ x: -100, y: -100 });
+    const scaleX = useRef(1);
 
     useEffect(() => {
-        const handleMouseMove = (e) => {
-            const dx = e.clientX - lastPos.current.x;
-            const dy = e.clientY - lastPos.current.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
+        // Initialsation pour cacher le curseur au début puis l'afficher quand on bouge
+        let initialized = false;
 
-            // On ajoute une trace tous les 20 pixels pour un roulement fluide
-            if (distance > 20) {
-                const angle = Math.atan2(dy, dx) * (180 / Math.PI);
-                const newTrack = {
-                    id: trackIdRef.current++,
-                    x: e.clientX,
-                    y: e.clientY,
-                    angle: angle,
-                    timestamp: Date.now()
-                };
-
-                // Conserver plus de traces (60)
-                setTracks(prev => [...prev.slice(-60), newTrack]);
-                lastPos.current = { x: e.clientX, y: e.clientY };
+        const onMouseMove = (e) => {
+            if (!initialized) {
+                pos.current.x = e.clientX;
+                pos.current.y = e.clientY;
+                initialized = true;
+                if (cursorRef.current) cursorRef.current.style.opacity = '1';
             }
+            target.current.x = e.clientX;
+            target.current.y = e.clientY;
+        };
+        window.addEventListener('mousemove', onMouseMove);
+
+        let rafId;
+        const speed = 0.12; // Facteur de fluidité du ressort
+
+        const loop = () => {
+            if (initialized) {
+                const dx = target.current.x - pos.current.x;
+                const dy = target.current.y - pos.current.y;
+
+                // Gérer le retournement du vélo selon la direction X
+                if (dx < -1.5) scaleX.current = -1;
+                else if (dx > 1.5) scaleX.current = 1;
+
+                // Tween fluide de la position
+                pos.current.x += dx * speed;
+                pos.current.y += dy * speed;
+
+                // Inclinaison du vélo dans les "côtes" et les "descentes" basée sur dy/dx
+                let tilt = 0;
+                const absDx = Math.abs(dx);
+                if (absDx > 0.5 || Math.abs(dy) > 0.5) {
+                    tilt = (dy / (absDx + 5)) * 12; // Calcul d'angle d'attaque
+                }
+                const clampedTilt = Math.max(-35, Math.min(35, tilt));
+
+                if (cursorRef.current) {
+                    // +15px d'offset pour ne pas bloquer les vrais clics de la souris de l'utilisateur
+                    cursorRef.current.style.transform = `translate3d(${pos.current.x + 15}px, ${pos.current.y + 15}px, 0) scaleX(${scaleX.current}) rotate(${clampedTilt}deg)`;
+                }
+            }
+            rafId = requestAnimationFrame(loop);
         };
 
-        window.addEventListener('mousemove', handleMouseMove);
-        return () => window.removeEventListener('mousemove', handleMouseMove);
+        loop();
+
+        return () => {
+            window.removeEventListener('mousemove', onMouseMove);
+            cancelAnimationFrame(rafId);
+        };
     }, []);
 
-    useEffect(() => {
-        const interval = setInterval(() => {
-            const now = Date.now();
-            setTracks(prev => prev.filter(t => now - t.timestamp < 1500));
-        }, 300);
-        return () => clearInterval(interval);
-    }, []);
-
+    // SVG d'un petit cycliste très minimaliste
     return (
-        <div className="fixed inset-0 pointer-events-none z-[999999] overflow-hidden">
-            {tracks.map(track => (
-                <div
-                    key={track.id}
-                    className="absolute animate-mud-fade mix-blend-multiply"
-                    style={{
-                        left: track.x,
-                        top: track.y,
-                        width: '32px',
-                        height: '40px',
-                        transform: `translate(-50%, -50%) rotate(${track.angle + 90}deg)`,
-                        color: '#111111'
-                    }}
-                >
-                    <svg viewBox="0 0 32 40" className="w-full h-full fill-current opacity-90" preserveAspectRatio="none">
-                        {/* Crampons latéraux extérieurs (gauche) avec un côté un peu "arraché" */}
-                        <path d="M 2 0 L 8 4 L 7 12 L 0 8 Z M 2 14 L 8 18 L 7 26 L 0 22 Z M 2 28 L 8 32 L 7 40 L 0 36 Z" />
-                        {/* Crampons latéraux extérieurs (droite) */}
-                        <path d="M 30 0 L 24 4 L 25 12 L 32 8 Z M 30 14 L 24 18 L 25 26 L 32 22 Z M 30 28 L 24 32 L 25 40 L 32 36 Z" />
-
-                        {/* Motif central complexe en chevrons VTT (asymétriques typiques) */}
-                        <path d="M 15 -2 L 10 4 L 13 10 L 16 6 Z M 16 2 L 21 8 L 18 14 L 14 8 Z" />
-                        <path d="M 15 12 L 10 18 L 13 24 L 16 20 Z M 16 16 L 21 22 L 18 28 L 14 22 Z" />
-                        <path d="M 15 26 L 10 32 L 13 38 L 16 34 Z M 16 30 L 21 36 L 18 42 L 14 36 Z" />
-
-                        {/* Petits blocs intermédiaires pour densifier la trace comme sur l'image */}
-                        <rect x="10" y="8" width="3" height="3" transform="rotate(-20 11 9)" />
-                        <rect x="20" y="10" width="3" height="4" transform="rotate(20 21 12)" />
-                        <rect x="9" y="22" width="3" height="3" transform="rotate(-20 10 23)" />
-                        <rect x="19" y="26" width="3" height="4" transform="rotate(20 20 28)" />
-                        <rect x="9" y="36" width="3" height="3" transform="rotate(-20 10 37)" />
-                    </svg>
-                </div>
-            ))}
+        <div
+            ref={cursorRef}
+            className="fixed top-0 left-0 pointer-events-none z-[999999] opacity-0 transition-opacity duration-500"
+            style={{ willChange: 'transform' }}
+        >
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="w-8 h-8 md:w-10 md:h-10 text-accent drop-shadow-xl"
+            >
+                <circle cx="5.5" cy="17.5" r="3.5" />
+                <circle cx="18.5" cy="17.5" r="3.5" />
+                <path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5V14l-3-3 4-3 2 3h2" />
+            </svg>
         </div>
     );
 }
@@ -1459,7 +1467,7 @@ function App() {
             </svg>
             <div className="noise-overlay" style={{ filter: 'url(#noiseFilter)', display: 'block' }}></div>
 
-            <TireTrackCursor />
+            <BicycleCursor />
 
             <Navbar user={user} onJoinClick={() => setIsAuthModalOpen(true)} onProfileClick={() => setIsProfileOpen(true)} />
             <HeroAccordion onOpenRoute={() => setIsRouteOpen(true)} />
