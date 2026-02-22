@@ -864,56 +864,112 @@ function RoutePopup({ onClose }) {
     );
 }
 
-function Hero({ onOpenRoute }) {
-    const containerRef = useRef(null);
+function HeroAccordion({ onOpenRoute }) {
+    const [activeId, setActiveId] = useState(2026);
 
-    useEffect(() => {
-        const ctx = gsap.context(() => {
-            gsap.from('.hero-text', {
-                y: 40,
-                opacity: 0,
-                duration: 1,
-                stagger: 0.08,
-                ease: 'power3.out',
-                delay: 0.2
-            });
-            gsap.from('.hero-cta', {
-                y: 40,
-                opacity: 0,
-                duration: 1,
-                ease: 'power3.out',
-                delay: 0.6
-            });
-        }, containerRef);
-        return () => ctx.revert();
-    }, []);
+    const trips = Array.from({ length: 11 }, (_, i) => {
+        const year = 2017 + i;
+        const gradients = [
+            "from-[#FF5E5B] to-[#FF8A88]", "from-[#FFB52E] to-[#FFD57F]", "from-[#4ADE80] to-[#86E8A8]",
+            "from-[#38BDF8] to-[#83D6FB]", "from-[#A855F7] to-[#C98CF9]", "from-[#F472B6] to-[#F8A4D1]",
+            "from-[#14B8A6] to-[#5EEAD9]", "from-[#F59E0B] to-[#FBCF74]", "from-[#8B5CF6] to-[#B393F8]",
+            "from-[#111111] to-[#333333]", "from-[#E63B2E] to-[#9B2117]"
+        ];
+        return {
+            id: year,
+            year: year,
+            title: year === 2026 ? "MISSION 26" : `Trip ${year}`,
+            bg: year === 2026
+                ? "url('https://images.unsplash.com/photo-1619337491481-de0b69b2050d?q=80&w=2535&auto=format&fit=crop')"
+                : null,
+            gradient: gradients[i]
+        };
+    });
 
     return (
-        <section ref={containerRef} className="relative h-[100dvh] w-full overflow-hidden flex flex-col justify-end pb-24 px-6 md:px-16" id="hero">
-            <img
-                src="https://images.unsplash.com/photo-1619337491481-de0b69b2050d?q=80&w=2535&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-                alt="Baie de San Sebastian"
-                className="absolute inset-0 w-full h-full object-cover -z-20 transform scale-105"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-dark via-dark/70 to-dark/20 -z-10"></div>
+        <section className="w-full h-[100dvh] flex flex-col md:flex-row bg-dark" id="hero">
+            {trips.map((trip) => {
+                const isActive = activeId === trip.id;
 
-            <div className="max-w-4xl z-10 text-primary">
-                <h1 className="flex flex-col gap-2 relative">
-                    <span className="hero-text font-sans font-extrabold pb-2 text-5xl md:text-7xl lg:text-8xl tracking-tighter uppercase leading-none">
-                        Conquérir la
-                    </span>
-                    <span className="hero-text font-serif italic text-[5rem] md:text-[8rem] lg:text-[10rem] leading-none mb-6 text-primary flex items-end gap-6">
-                        <span className="block h-[2px] w-24 bg-accent mb-[2rem] md:mb-[3rem]"></span>
-                        Distance.
-                    </span>
-                </h1>
-                <p className="hero-text mt-8 text-primary/80 font-mono text-base md:text-lg max-w-lg mb-12 border-l-2 border-accent pl-4">
-                    De Bordeaux à San Sébastien : la précision brute d'un effort collectif. Notre trip 2026.
-                </p>
-                <button onClick={onOpenRoute} className="hero-cta btn-magnetic bg-accent text-white px-8 py-4 rounded-full font-sans font-bold text-lg inline-flex items-center gap-3">
-                    Explorer l'Itinéraire
-                </button>
-            </div>
+                return (
+                    <div
+                        key={trip.id}
+                        onClick={() => setActiveId(trip.id)}
+                        className={`
+                            relative cursor-pointer transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] flex-shrink-0
+                            border-b-[3px] md:border-b-0 md:border-r-[3px] border-dark
+                            overflow-hidden group
+                            ${isActive ? 'flex-[10] md:flex-[10]' : 'flex-[1] md:flex-[1] min-h-[40px] md:min-w-[45px] hover:flex-[1.5] md:hover:flex-[1.5]'}
+                        `}
+                    >
+                        {/* BACKGROUND */}
+                        <div
+                            className={`absolute inset-0 bg-cover bg-center transition-transform duration-1000 ${isActive ? 'scale-105' : 'scale-100 group-hover:scale-105'}`}
+                            style={trip.bg ? { backgroundImage: trip.bg } : {}}
+                        />
+                        {!trip.bg && (
+                            <div className={`absolute inset-0 bg-gradient-to-br ${trip.gradient} opacity-90`} />
+                        )}
+                        {/* Overlay to dim inactive */}
+                        <div className={`absolute inset-0 bg-dark transition-opacity duration-700 ${isActive ? 'opacity-30 md:opacity-20' : 'opacity-60 group-hover:opacity-40'}`} />
+
+                        {/* CONTENT CONTAINER */}
+                        <div className="absolute inset-0 flex flex-col justify-end p-4 md:p-8">
+
+                            {/* VERTICAL / HORIZONTAL TITLE (When Inactive) */}
+                            <div className={`
+                                absolute inset-0 flex items-center justify-center
+                                transition-opacity duration-500
+                                ${isActive ? 'opacity-0 pointer-events-none' : 'opacity-100'}
+                            `}>
+                                <span className="text-white font-sans font-black text-lg md:text-2xl uppercase tracking-widest whitespace-nowrap md:-rotate-90 origin-center drop-shadow-md">
+                                    {trip.year}
+                                </span>
+                            </div>
+
+                            {/* ACTIVE CONTENT */}
+                            <div className={`
+                                flex flex-col justify-end h-full w-full max-w-4xl
+                                transition-all duration-700 delay-100
+                                ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8 pointer-events-none'}
+                            `}>
+                                {isActive && (
+                                    <>
+                                        {trip.id === 2026 ? (
+                                            <div className="text-primary z-10 mb-8 md:mb-16">
+                                                <h1 className="flex flex-col gap-1 md:gap-2 relative">
+                                                    <span className="font-sans font-extrabold pb-2 text-3xl md:text-6xl lg:text-7xl tracking-tighter uppercase leading-none drop-shadow-lg">
+                                                        Conquérir la
+                                                    </span>
+                                                    <span className="font-serif italic text-[3.5rem] md:text-[7rem] lg:text-[9rem] leading-none mb-4 md:mb-6 text-primary flex items-end gap-2 md:gap-6 drop-shadow-lg">
+                                                        <span className="hidden md:block h-[2px] w-24 bg-accent mb-[2rem] md:mb-[3rem]"></span>
+                                                        Distance.
+                                                    </span>
+                                                </h1>
+                                                <p className="mt-2 md:mt-6 text-primary/90 font-mono text-[10px] md:text-lg max-w-lg mb-6 md:mb-10 border-l-2 border-accent pl-4 drop-shadow-md bg-dark/20 p-2 md:bg-transparent md:p-0 rounded">
+                                                    De Bordeaux à San Sébastien : la précision brute d'un effort collectif. Notre trip 2026.
+                                                </p>
+                                                <button onClick={(e) => { e.stopPropagation(); onOpenRoute(); }} className="btn-magnetic bg-accent text-white px-5 py-3 md:px-8 md:py-4 rounded-full font-sans font-bold text-xs md:text-lg inline-flex items-center gap-3 hover:scale-105 transition-transform w-fit border-2 border-transparent hover:border-white shadow-xl">
+                                                    Explorer l'Itinéraire
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div className="text-white z-10 mb-8 md:mb-16">
+                                                <h2 className="font-sans font-black text-5xl md:text-8xl lg:text-[9rem] uppercase tracking-tighter italic mb-4 drop-shadow-xl">
+                                                    {trip.title}
+                                                </h2>
+                                                <div className="bg-dark/80 backdrop-blur-sm text-white px-4 py-2 font-mono font-bold text-xs md:text-sm uppercase tracking-widest border-[3px] border-white inline-block shadow-lg">
+                                                    ARCHIVE CLASSIFIÉE
+                                                </div>
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                );
+            })}
         </section>
     );
 }
@@ -1310,7 +1366,7 @@ function App() {
             <div className="noise-overlay" style={{ filter: 'url(#noiseFilter)', display: 'block' }}></div>
 
             <Navbar user={user} onJoinClick={() => setIsAuthModalOpen(true)} onProfileClick={() => setIsProfileOpen(true)} />
-            <Hero onOpenRoute={() => setIsRouteOpen(true)} />
+            <HeroAccordion onOpenRoute={() => setIsRouteOpen(true)} />
             <Features />
             <Philosophy />
             <Protocol />
