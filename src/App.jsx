@@ -8,7 +8,7 @@ gsap.registerPlugin(ScrollTrigger);
 
 function HeaderLogo() {
     return (
-        <div className="flex items-center justify-center w-[88px] h-[88px] -ml-4 transition-transform duration-300 hover:rotate-12 bg-white rounded-full border-2 border-dark/5 shadow-sm">
+        <div className="absolute -left-6 top-1/2 -translate-y-1/2 w-[100px] h-[100px] md:w-[120px] md:h-[120px] transition-transform duration-300 hover:rotate-12 bg-white rounded-full border-4 border-[#F5F3EE] shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] z-50 flex items-center justify-center">
             <svg viewBox="0 0 120 120" className="w-[85%] h-[85%] text-accent drop-shadow-sm">
                 <defs>
                     <path id="top-arc" d="M 24,60 A 36,36 0 0,1 96,60" fill="none" />
@@ -55,7 +55,7 @@ function Navbar({ user, onJoinClick, onProfileClick }) {
 
     return (
         <nav
-            className="group fixed top-6 left-1/2 -translate-x-1/2 z-50 flex items-center justify-between px-6 py-3 rounded-full transition-all duration-300 w-[90%] max-w-5xl border border-dark/10 bg-background/80 backdrop-blur-xl shadow-lg text-accent"
+            className="group fixed top-6 left-1/2 -translate-x-1/2 z-50 flex items-center justify-between pl-20 pr-4 md:pl-28 md:pr-4 py-2 rounded-full transition-all duration-300 w-[90%] max-w-5xl border border-dark/10 bg-background/80 backdrop-blur-xl shadow-lg text-accent"
         >
             <HeaderLogo />
             <div className="hidden md:flex gap-8 font-mono text-lg uppercase">
@@ -68,16 +68,16 @@ function Navbar({ user, onJoinClick, onProfileClick }) {
                 {user ? (
                     <div className="relative group/user z-50">
                         <button
-                            className="flex items-center gap-3 bg-dark text-white px-4 py-2 rounded-full font-mono text-xs uppercase tracking-widest hover:bg-accent transition-colors"
+                            className="flex items-center gap-3 bg-dark text-white px-5 py-3 rounded-full font-mono text-sm uppercase tracking-widest hover:bg-accent transition-colors"
                         >
                             {user.user_metadata?.avatar_url ? (
-                                <img src={user.user_metadata.avatar_url} alt="Avatar" className="w-6 h-6 rounded-full object-cover border border-white/20" />
+                                <img src={user.user_metadata.avatar_url} alt="Avatar" className="w-8 h-8 rounded-full object-cover border-2 border-white/20" />
                             ) : (
-                                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                                <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse mx-2" />
                             )}
-                            {user.user_metadata?.nickname || user.email.split('@')[0]}
+                            <span className="font-bold">{user.user_metadata?.nickname || user.email.split('@')[0]}</span>
                             {(user.user_metadata?.role || user.user_metadata?.bike_name) && (
-                                <span className="hidden md:inline text-[8px] opacity-70 border-l border-white/30 pl-2">
+                                <span className="hidden md:inline text-[10px] opacity-70 border-l border-white/30 pl-3">
                                     {user.user_metadata?.role || "Pilote"}
                                 </span>
                             )}
