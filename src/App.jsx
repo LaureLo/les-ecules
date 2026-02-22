@@ -913,7 +913,6 @@ function HeroAccordion({ onOpenRoute }) {
                         onClick={() => setActiveId(trip.id)}
                         className={`
                             relative cursor-pointer transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] flex-shrink-0
-                            border-b-[3px] md:border-b-0 md:border-r-[3px] border-accent
                             overflow-hidden group
                             ${isActive ? 'flex-[10] md:flex-[10]' : 'flex-[1] md:flex-[1] min-h-[40px] md:min-w-[45px] hover:flex-[1.5] md:hover:flex-[1.5]'}
                         `}
