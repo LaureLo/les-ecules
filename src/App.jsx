@@ -100,24 +100,37 @@ function NextTripGlobe() {
 
     useEffect(() => {
         let phi = 0;
-        let width = canvasRef.current.offsetWidth;
+        let width = 0;
+
+        const onResize = () => {
+            if (canvasRef.current) width = canvasRef.current.offsetWidth;
+        };
+        window.addEventListener('resize', onResize);
+        onResize(); // Initial read
+
         const globe = createGlobe(canvasRef.current, {
             devicePixelRatio: 2,
-            width: width * 2,
-            height: width * 2,
+            width: width * 2 || 1000,
+            height: width * 2 || 1000,
             phi: 0,
             theta: 0.15,
-            dark: 1,
+            dark: 0, // <-- Thème CLAIR
             diffuse: 1.2,
             mapSamples: 16000,
             mapBrightness: 6,
-            baseColor: [1, 1, 1], // Inverted in dark mode
-            markerColor: [1, 0.36, 0.35], // Accent FF5E5B -> ~ [1, 0.36, 0.35]
-            glowColor: [0.1, 0.1, 0.1],
+            baseColor: [1, 1, 1], // Globe blanc/gris
+            markerColor: [1, 0.36, 0.35],
+            glowColor: [1, 1, 1], // Glow blanc pour fond foncé
             markers: [],
             onRender: (state) => {
+                // Dynamically update width if Accordion expands
+                if (canvasRef.current && width !== canvasRef.current.offsetWidth) {
+                    onResize();
+                }
                 state.phi = phi;
-                phi += 0.015; // Un peu plus vite
+                phi += 0.015; // Speed
+                state.width = width * 2;
+                state.height = width * 2;
             },
         });
 
@@ -134,6 +147,7 @@ function NextTripGlobe() {
         }, 800);
 
         return () => {
+            window.removeEventListener('resize', onResize);
             globe.destroy();
             clearInterval(interval);
         };
@@ -1129,7 +1143,7 @@ function HeroAccordion({ onOpenRoute }) {
                                                     <NextTripGlobe />
                                                 </div>
                                                 <div className="w-full md:w-1/2 flex items-center justify-center md:justify-start">
-                                                    <h2 className="font-sans font-black text-6xl md:text-7xl lg:text-[8rem] uppercase tracking-tighter italic text-center md:text-left drop-shadow-xl leading-[0.9]">
+                                                    <h2 className="font-sans font-black text-5xl md:text-6xl lg:text-7xl xl:text-[6rem] uppercase tracking-tighter italic text-center md:text-left drop-shadow-xl leading-[0.9] break-words">
                                                         Prochaine<br />
                                                         <span className="text-accent underline decoration-4 underline-offset-8">Étape ?</span>
                                                     </h2>
