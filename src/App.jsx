@@ -6,6 +6,73 @@ import { Eye, EyeOff, Send, MessageSquare, X, Bike, Paperclip, Download, FileTex
 
 gsap.registerPlugin(ScrollTrigger);
 
+function TireTrackCursor() {
+    const [tracks, setTracks] = useState([]);
+    const lastPos = useRef({ x: -100, y: -100 });
+    const trackIdRef = useRef(0);
+
+    useEffect(() => {
+        const handleMouseMove = (e) => {
+            const dx = e.clientX - lastPos.current.x;
+            const dy = e.clientY - lastPos.current.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            // On ajoute une trace tous les 15 pixels parcourus
+            if (distance > 15) {
+                const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+                const newTrack = {
+                    id: trackIdRef.current++,
+                    x: e.clientX,
+                    y: e.clientY,
+                    angle: angle,
+                    timestamp: Date.now()
+                };
+
+                // On garde un maximum de 40 traces en même temps
+                setTracks(prev => [...prev.slice(-40), newTrack]);
+                lastPos.current = { x: e.clientX, y: e.clientY };
+            }
+        };
+
+        window.addEventListener('mousemove', handleMouseMove);
+        return () => window.removeEventListener('mousemove', handleMouseMove);
+    }, []);
+
+    useEffect(() => {
+        // Nettoyage des vieilles traces de boue
+        const interval = setInterval(() => {
+            const now = Date.now();
+            setTracks(prev => prev.filter(t => now - t.timestamp < 1200));
+        }, 300);
+        return () => clearInterval(interval);
+    }, []);
+
+    return (
+        <div className="fixed inset-0 pointer-events-none z-[999999] overflow-hidden">
+            {tracks.map(track => (
+                <div
+                    key={track.id}
+                    className="absolute animate-mud-fade drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]"
+                    style={{
+                        left: track.x,
+                        top: track.y,
+                        width: '12px',
+                        height: '16px',
+                        // Rotation +90 car la trace de pneu est orientée verticalement dans le SVG
+                        transform: `translate(-50%, -50%) rotate(${track.angle + 90}deg)`,
+                        color: '#4A3728' // Couleur Boue sombre
+                    }}
+                >
+                    <svg viewBox="0 0 12 16" className="w-full h-full fill-current" preserveAspectRatio="none">
+                        {/* Crampons asymétriques typiques VTT */}
+                        <path d="M0,2 L4,4 L4,6 L0,4 Z M8,0 L12,2 L12,4 L8,2 Z M0,8 L4,10 L4,12 L0,10 Z M8,6 L12,8 L12,10 L8,8 Z M0,14 L4,16 L4,16 L0,14 Z M8,12 L12,14 L12,16 L8,14 Z" opacity="0.8" />
+                    </svg>
+                </div>
+            ))}
+        </div>
+    );
+}
+
 function HeaderLogo() {
     return (
         <div className="absolute -left-6 top-1/2 -translate-y-1/2 w-[100px] h-[100px] md:w-[120px] md:h-[120px] transition-transform duration-300 hover:rotate-12 bg-white rounded-full border-4 border-[#F5F3EE] shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] z-50 flex items-center justify-center">
@@ -1379,6 +1446,8 @@ function App() {
                 </filter>
             </svg>
             <div className="noise-overlay" style={{ filter: 'url(#noiseFilter)', display: 'block' }}></div>
+
+            <TireTrackCursor />
 
             <Navbar user={user} onJoinClick={() => setIsAuthModalOpen(true)} onProfileClick={() => setIsProfileOpen(true)} />
             <HeroAccordion onOpenRoute={() => setIsRouteOpen(true)} />
