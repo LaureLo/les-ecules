@@ -46,7 +46,7 @@ function HeaderLogo() {
     );
 }
 
-function Navbar({ user, onJoinClick }) {
+function Navbar({ user, onJoinClick, onProfileClick }) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     const handleSignOut = async () => {
@@ -66,18 +66,33 @@ function Navbar({ user, onJoinClick }) {
 
             <div className="flex items-center gap-4">
                 {user ? (
-                    <div className="relative group/user">
+                    <div className="relative group/user z-50">
                         <button
-                            className="flex items-center gap-2 bg-dark text-white px-4 py-2 rounded-full font-mono text-xs uppercase tracking-widest hover:bg-accent transition-colors"
+                            className="flex items-center gap-3 bg-dark text-white px-4 py-2 rounded-full font-mono text-xs uppercase tracking-widest hover:bg-accent transition-colors"
                         >
-                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                            {user.user_metadata?.avatar_url ? (
+                                <img src={user.user_metadata.avatar_url} alt="Avatar" className="w-6 h-6 rounded-full object-cover border border-white/20" />
+                            ) : (
+                                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                            )}
                             {user.user_metadata?.nickname || user.email.split('@')[0]}
+                            {(user.user_metadata?.role || user.user_metadata?.bike_name) && (
+                                <span className="hidden md:inline text-[8px] opacity-70 border-l border-white/30 pl-2">
+                                    {user.user_metadata?.role || "Pilote"}
+                                </span>
+                            )}
                         </button>
-                        <div className="absolute right-0 top-full pt-2 w-48 opacity-0 group-hover/user:opacity-100 transition-all pointer-events-none group-hover/user:pointer-events-auto">
-                            <div className="bg-[#F5F3EE] border-4 border-dark rounded-xl shadow-[8px_8px_0px_0px_#111111] p-2">
+                        <div className="absolute right-0 top-full pt-2 w-48 opacity-0 group-hover/user:opacity-100 transition-all pointer-events-none group-hover/user:pointer-events-auto origin-top-right">
+                            <div className="bg-[#F5F3EE] border-4 border-dark rounded-xl shadow-[8px_8px_0px_0px_#111111] p-2 flex flex-col gap-1">
+                                <button
+                                    onClick={onProfileClick}
+                                    className="w-full text-left px-4 py-2 hover:bg-black/5 rounded-lg font-mono text-xs uppercase text-dark font-bold"
+                                >
+                                    Carnet de bord
+                                </button>
                                 <button
                                     onClick={handleSignOut}
-                                    className="w-full text-left px-4 py-2 hover:bg-black/5 rounded-lg font-mono text-xs uppercase text-dark font-bold"
+                                    className="w-full text-left px-4 py-2 hover:bg-accent hover:text-white rounded-lg font-mono text-xs uppercase text-dark font-bold transition-colors"
                                 >
                                     Se déconnecter
                                 </button>
@@ -252,6 +267,152 @@ function AuthModal({ onClose }) {
                 >
                     {isLogin ? "Pas de compte ? S'enregistrer" : "Déjà membre ? Se connecter"}
                 </button>
+            </div>
+        </div>
+    );
+}
+
+function ProfileModal({ user, onClose }) {
+    const [nickname, setNickname] = useState(user?.user_metadata?.nickname || '');
+    const [role, setRole] = useState(user?.user_metadata?.role || '');
+    const [bikeName, setBikeName] = useState(user?.user_metadata?.bike_name || '');
+    const [password, setPassword] = useState('');
+    const [avatarUrl, setAvatarUrl] = useState(user?.user_metadata?.avatar_url || '');
+
+    const [uploading, setUploading] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState(null);
+    const fileInputRef = useRef(null);
+
+    const roles = [
+        "Le sage", "Le ronchonchon", "Le cuistot", "Le colosse",
+        "Le sudiste", "L'artiste", "Le voyageur", "Le blagueur/historien"
+    ];
+
+    const handleAvatarUpload = async (e) => {
+        try {
+            setUploading(true);
+            setError(null);
+
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${user.id}-${Math.random()}.${fileExt}`;
+            const filePath = `${user.id}/${fileName}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('avatars')
+                .upload(filePath, file);
+
+            if (uploadError) throw uploadError;
+
+            const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
+            setAvatarUrl(data.publicUrl);
+        } catch (error) {
+            setError("Erreur upload photo : " + error.message);
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    const handleSave = async (e) => {
+        e.preventDefault();
+        setSaving(true);
+        setError(null);
+
+        try {
+            // Update metadata
+            const { error: metaError } = await supabase.auth.updateUser({
+                data: {
+                    nickname: nickname,
+                    role: role,
+                    bike_name: bikeName,
+                    avatar_url: avatarUrl
+                }
+            });
+
+            if (metaError) throw metaError;
+
+            // Update password if typed
+            if (password) {
+                const { error: passError } = await supabase.auth.updateUser({
+                    password: password
+                });
+                if (passError) throw passError;
+            }
+
+            onClose();
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 flex items-center justify-center p-4 z-[99999999]" style={{ backgroundColor: 'rgba(0,0,0,0.98)' }} onClick={onClose}>
+            <div className="w-full max-w-md bg-[#F5F3EE] rounded-[2.5rem] border-[8px] border-dark p-8 relative shadow-[25px_25px_0px_0px_#4ADE80]" onClick={e => e.stopPropagation()}>
+
+                <button onClick={onClose} className="absolute -top-4 -right-4 w-12 h-12 bg-accent text-white rounded-full flex items-center justify-center border-4 border-dark shadow-xl hover:scale-110 transition-transform">
+                    <X size={24} strokeWidth={4} />
+                </button>
+
+                <h2 className="font-sans font-black text-4xl uppercase tracking-tighter text-dark mb-6 italic">Profil Pilote</h2>
+
+                <form onSubmit={handleSave} className="space-y-4">
+                    {/* AVATAR */}
+                    <div className="flex flex-col items-center mb-6">
+                        <div className="relative group/avatar cursor-pointer" onClick={() => !uploading && fileInputRef.current?.click()}>
+                            <div className="w-24 h-24 rounded-full border-4 border-dark bg-white overflow-hidden flex items-center justify-center shadow-lg group-hover/avatar:border-accent transition-colors">
+                                {avatarUrl ? (
+                                    <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                                ) : (
+                                    <span className="font-mono text-4xl font-black text-dark/20">?</span>
+                                )}
+                            </div>
+                            <div className="absolute inset-0 bg-dark/50 rounded-full flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity">
+                                <span className="text-white font-mono text-[10px] uppercase font-bold text-center px-2">
+                                    {uploading ? '...' : 'Photo'}
+                                </span>
+                            </div>
+                            <input type="file" className="hidden" ref={fileInputRef} accept="image/*" onChange={handleAvatarUpload} />
+                        </div>
+                    </div>
+
+                    {/* CHAMP PSEUDO */}
+                    <div>
+                        <label className="block font-mono text-[10px] uppercase font-bold text-dark mb-1">Pseudo / Indicatif</label>
+                        <input type="text" value={nickname} onChange={e => setNickname(e.target.value)} required className="w-full bg-white border-4 border-dark rounded-xl px-4 py-3 font-mono text-sm focus:outline-none focus:border-accent transition-colors" />
+                    </div>
+
+                    {/* CHAMP VÉLO */}
+                    <div>
+                        <label className="block font-mono text-[10px] uppercase font-bold text-dark mb-1">Monture (Vélo)</label>
+                        <input type="text" value={bikeName} onChange={e => setBikeName(e.target.value)} placeholder="Ex: Gravel Triban RC520" className="w-full bg-white border-4 border-dark rounded-xl px-4 py-3 font-mono text-sm focus:outline-none focus:border-accent transition-colors" />
+                    </div>
+
+                    {/* CHAMP SPÉCIALITÉ */}
+                    <div>
+                        <label className="block font-mono text-[10px] uppercase font-bold text-dark mb-1">Spécialité Escouade</label>
+                        <select value={role} onChange={e => setRole(e.target.value)} className="w-full bg-white border-4 border-dark rounded-xl px-4 py-3 font-mono text-sm focus:outline-none focus:border-accent transition-colors appearance-none cursor-pointer">
+                            <option value="">Sélectionner une spécialité</option>
+                            {roles.map(r => <option key={r} value={r}>{r}</option>)}
+                        </select>
+                    </div>
+
+                    {/* CHAMP MDP */}
+                    <div>
+                        <label className="block font-mono text-[10px] uppercase font-bold text-dark mb-1">Mot de passe (Laisser vide si inchangé)</label>
+                        <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Nouveau mot de passe" className="w-full bg-white border-4 border-dark rounded-xl px-4 py-3 font-mono text-sm focus:outline-none focus:border-accent transition-colors" />
+                    </div>
+
+                    {error && <div className="bg-accent/10 border-2 border-accent p-3 rounded-lg font-mono text-[10px] text-accent uppercase font-bold">Erreur: {error}</div>}
+
+                    <button type="submit" disabled={saving || uploading} className="w-full bg-dark text-[#4ADE80] py-4 rounded-xl font-sans font-black uppercase tracking-widest hover:bg-[#4ADE80] hover:text-dark border-4 border-transparent hover:border-dark transition-all disabled:opacity-50 mt-4">
+                        {saving ? 'Enregistrement...' : 'Valider'}
+                    </button>
+                </form>
             </div>
         </div>
     );
@@ -1110,6 +1271,7 @@ function Footer() {
 function App() {
     const [isRouteOpen, setIsRouteOpen] = useState(false);
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+    const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [user, setUser] = useState(null);
 
     useEffect(() => {
@@ -1135,7 +1297,7 @@ function App() {
             </svg>
             <div className="noise-overlay" style={{ filter: 'url(#noiseFilter)', display: 'block' }}></div>
 
-            <Navbar user={user} onJoinClick={() => setIsAuthModalOpen(true)} />
+            <Navbar user={user} onJoinClick={() => setIsAuthModalOpen(true)} onProfileClick={() => setIsProfileOpen(true)} />
             <Hero onOpenRoute={() => setIsRouteOpen(true)} />
             <Features />
             <Philosophy />
@@ -1146,6 +1308,7 @@ function App() {
 
             {isRouteOpen && <RoutePopup onClose={() => setIsRouteOpen(false)} />}
             {isAuthModalOpen && <AuthModal onClose={() => setIsAuthModalOpen(false)} />}
+            {isProfileOpen && user && <ProfileModal user={user} onClose={() => setIsProfileOpen(false)} />}
         </>
     );
 }
