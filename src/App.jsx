@@ -883,7 +883,9 @@ function HeroAccordion({ onOpenRoute }) {
                 ? "url('https://images.unsplash.com/photo-1619337491481-de0b69b2050d?q=80&w=2535&auto=format&fit=crop')"
                 : year === 2025
                     ? "url('https://images.unsplash.com/photo-1592900086621-4cd9d2ecb7ac?q=80&w=2574&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')"
-                    : null,
+                    : year === 2024
+                        ? "url('https://images.unsplash.com/photo-1746253077622-a5ef69c43b6d?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')"
+                        : null,
             gradient: gradients[i]
         };
     });
