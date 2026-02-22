@@ -17,8 +17,8 @@ function TireTrackCursor() {
             const dy = e.clientY - lastPos.current.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
 
-            // On ajoute une trace tous les 15 pixels parcourus
-            if (distance > 15) {
+            // On ajoute une trace tous les 20 pixels pour un roulement fluide
+            if (distance > 20) {
                 const angle = Math.atan2(dy, dx) * (180 / Math.PI);
                 const newTrack = {
                     id: trackIdRef.current++,
@@ -28,8 +28,8 @@ function TireTrackCursor() {
                     timestamp: Date.now()
                 };
 
-                // On garde un maximum de 40 traces en même temps
-                setTracks(prev => [...prev.slice(-40), newTrack]);
+                // Conserver plus de traces (60)
+                setTracks(prev => [...prev.slice(-60), newTrack]);
                 lastPos.current = { x: e.clientX, y: e.clientY };
             }
         };
@@ -39,10 +39,9 @@ function TireTrackCursor() {
     }, []);
 
     useEffect(() => {
-        // Nettoyage des vieilles traces de boue
         const interval = setInterval(() => {
             const now = Date.now();
-            setTracks(prev => prev.filter(t => now - t.timestamp < 1200));
+            setTracks(prev => prev.filter(t => now - t.timestamp < 1500));
         }, 300);
         return () => clearInterval(interval);
     }, []);
@@ -52,20 +51,33 @@ function TireTrackCursor() {
             {tracks.map(track => (
                 <div
                     key={track.id}
-                    className="absolute animate-mud-fade drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]"
+                    className="absolute animate-mud-fade mix-blend-multiply"
                     style={{
                         left: track.x,
                         top: track.y,
-                        width: '12px',
-                        height: '16px',
-                        // Rotation +90 car la trace de pneu est orientée verticalement dans le SVG
+                        width: '32px',
+                        height: '40px',
                         transform: `translate(-50%, -50%) rotate(${track.angle + 90}deg)`,
-                        color: '#4A3728' // Couleur Boue sombre
+                        color: '#111111'
                     }}
                 >
-                    <svg viewBox="0 0 12 16" className="w-full h-full fill-current" preserveAspectRatio="none">
-                        {/* Crampons asymétriques typiques VTT */}
-                        <path d="M0,2 L4,4 L4,6 L0,4 Z M8,0 L12,2 L12,4 L8,2 Z M0,8 L4,10 L4,12 L0,10 Z M8,6 L12,8 L12,10 L8,8 Z M0,14 L4,16 L4,16 L0,14 Z M8,12 L12,14 L12,16 L8,14 Z" opacity="0.8" />
+                    <svg viewBox="0 0 32 40" className="w-full h-full fill-current opacity-90" preserveAspectRatio="none">
+                        {/* Crampons latéraux extérieurs (gauche) avec un côté un peu "arraché" */}
+                        <path d="M 2 0 L 8 4 L 7 12 L 0 8 Z M 2 14 L 8 18 L 7 26 L 0 22 Z M 2 28 L 8 32 L 7 40 L 0 36 Z" />
+                        {/* Crampons latéraux extérieurs (droite) */}
+                        <path d="M 30 0 L 24 4 L 25 12 L 32 8 Z M 30 14 L 24 18 L 25 26 L 32 22 Z M 30 28 L 24 32 L 25 40 L 32 36 Z" />
+
+                        {/* Motif central complexe en chevrons VTT (asymétriques typiques) */}
+                        <path d="M 15 -2 L 10 4 L 13 10 L 16 6 Z M 16 2 L 21 8 L 18 14 L 14 8 Z" />
+                        <path d="M 15 12 L 10 18 L 13 24 L 16 20 Z M 16 16 L 21 22 L 18 28 L 14 22 Z" />
+                        <path d="M 15 26 L 10 32 L 13 38 L 16 34 Z M 16 30 L 21 36 L 18 42 L 14 36 Z" />
+
+                        {/* Petits blocs intermédiaires pour densifier la trace comme sur l'image */}
+                        <rect x="10" y="8" width="3" height="3" transform="rotate(-20 11 9)" />
+                        <rect x="20" y="10" width="3" height="4" transform="rotate(20 21 12)" />
+                        <rect x="9" y="22" width="3" height="3" transform="rotate(-20 10 23)" />
+                        <rect x="19" y="26" width="3" height="4" transform="rotate(20 20 28)" />
+                        <rect x="9" y="36" width="3" height="3" transform="rotate(-20 10 37)" />
                     </svg>
                 </div>
             ))}
