@@ -889,7 +889,9 @@ function HeroAccordion({ onOpenRoute }) {
                             ? "url('https://images.unsplash.com/photo-1690473265533-f7e19e54d8d3?q=80&w=2535&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')"
                             : year === 2022
                                 ? "url('https://images.unsplash.com/photo-1621847468516-1ed5d0df56fe?q=80&w=2574&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')"
-                                : null,
+                                : year === 2021
+                                    ? "url('/trip-2021.jpg')"
+                                    : null,
             gradient: gradients[i]
         };
     });
