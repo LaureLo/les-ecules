@@ -100,18 +100,11 @@ function NextTripGlobe() {
 
     useEffect(() => {
         let phi = 0;
-        let width = 0;
-
-        const onResize = () => {
-            if (canvasRef.current) width = canvasRef.current.offsetWidth;
-        };
-        window.addEventListener('resize', onResize);
-        onResize(); // Initial read
 
         const globe = createGlobe(canvasRef.current, {
             devicePixelRatio: 2,
-            width: width * 2 || 1000,
-            height: width * 2 || 1000,
+            width: 1000,
+            height: 1000,
             phi: 0,
             theta: 0.15,
             dark: 0, // <-- Thème CLAIR
@@ -123,18 +116,17 @@ function NextTripGlobe() {
             glowColor: [1, 1, 1], // Glow blanc pour fond foncé
             markers: [],
             onRender: (state) => {
-                // Dynamically update width if Accordion expands
-                if (canvasRef.current && width !== canvasRef.current.offsetWidth) {
-                    onResize();
+                let currentWidth = 1000;
+                if (canvasRef.current) {
+                    currentWidth = Math.max(canvasRef.current.offsetWidth, 100);
                 }
                 state.phi = phi;
                 phi += 0.015; // Speed
-                state.width = width * 2;
-                state.height = width * 2;
+                state.width = currentWidth * 2;
+                state.height = currentWidth * 2;
             },
         });
 
-        // Spawn random '?' marks
         const interval = setInterval(() => {
             setMarks(prev => {
                 const newMark = {
@@ -142,29 +134,28 @@ function NextTripGlobe() {
                     x: Math.random() * 80 + 10,
                     y: Math.random() * 80 + 10
                 };
-                return [...prev.slice(-4), newMark];
+                return [...prev.slice(-3), newMark];
             });
-        }, 800);
+        }, 1200);
 
         return () => {
-            window.removeEventListener('resize', onResize);
             globe.destroy();
             clearInterval(interval);
         };
     }, []);
 
     return (
-        <div className="relative w-full aspect-square max-w-[600px] mx-auto flex items-center justify-center -mt-8">
+        <div className="relative w-full aspect-square max-w-[800px] mx-auto flex items-center justify-center">
             <canvas
                 ref={canvasRef}
-                style={{ width: "100%", height: "100%", contain: "layout paint size" }}
+                style={{ width: "100%", height: "100%", contain: "layout paint size", opacity: 0.95 }}
             />
             {/* Random question marks overlay */}
             <div className="absolute inset-0 pointer-events-none">
                 {marks.map(m => (
                     <div
                         key={m.id}
-                        className="absolute text-accent font-black font-serif text-4xl md:text-6xl animate-mud-fade drop-shadow-[0_0_15px_rgba(255,94,91,0.6)]"
+                        className="absolute text-accent font-black font-serif text-5xl md:text-7xl animate-mud-fade drop-shadow-[0_0_15px_rgba(255,94,91,0.6)]"
                         style={{ left: `${m.x}%`, top: `${m.y}%`, transform: 'translate(-50%, -50%)' }}
                     >
                         ?
@@ -1138,17 +1129,20 @@ function HeroAccordion({ onOpenRoute }) {
                                                 </button>
                                             </div>
                                         ) : trip.id === 2027 ? (
-                                            <div className="text-white z-10 mb-8 md:mb-16 flex flex-col md:flex-row items-center justify-between w-full h-full pb-8">
-                                                <div className="w-full md:w-1/2 flex items-center justify-center">
+                                            <>
+                                                {/* Le globe en background, ultra visible */}
+                                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-80 mix-blend-screen mix-blend-normal">
                                                     <NextTripGlobe />
                                                 </div>
-                                                <div className="w-full md:w-1/2 flex items-center justify-center md:justify-start">
-                                                    <h2 className="font-sans font-black text-5xl md:text-6xl lg:text-7xl xl:text-[6rem] uppercase tracking-tighter italic text-center md:text-left drop-shadow-xl leading-[0.9] break-words">
+
+                                                {/* Titre complètement en bas à gauche */}
+                                                <div className="text-white z-10 w-full pb-0 md:pb-6 relative text-left pointer-events-none mt-auto">
+                                                    <h2 className="font-sans font-black text-6xl md:text-7xl lg:text-[8rem] uppercase tracking-tighter italic drop-shadow-xl leading-[0.9]">
                                                         Prochaine<br />
                                                         <span className="text-accent underline decoration-4 underline-offset-8">Étape ?</span>
                                                     </h2>
                                                 </div>
-                                            </div>
+                                            </>
                                         ) : (
                                             <div className="text-white z-10 mb-8 md:mb-16">
                                                 <h2 className="font-sans font-black text-5xl md:text-8xl lg:text-[9rem] uppercase tracking-tighter italic mb-4 drop-shadow-xl">
