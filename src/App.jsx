@@ -638,13 +638,20 @@ function Chat({ user }) {
                 // Extraire tous les profils connectés
                 const allPresences = Object.values(newState).flat();
 
-                // Filtrer pour ne garder que les AUTRES (pas soi-même)
-                const otherUsers = allPresences
-                    .filter(p => p.user_id !== user.id)
-                    .map(p => p.nickname || "Anonyme");
+                // Filtrer pour ne garder que les AUTRES (pas soi-même) et dédoublonner
+                const otherUsersMap = new Map();
+                allPresences.forEach(p => {
+                    if (p.user_id !== user.id && !otherUsersMap.has(p.user_id)) {
+                        otherUsersMap.set(p.user_id, {
+                            id: p.user_id,
+                            name: p.nickname || "Anonyme",
+                            image: p.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${p.user_id}`,
+                            designation: p.role || "Opérateur"
+                        });
+                    }
+                });
 
-                // Supprimer les doublons s'il y en a et mettre à jour
-                const uniqueOthers = [...new Set(otherUsers)];
+                const uniqueOthers = Array.from(otherUsersMap.values());
                 setOnlineUsers(uniqueOthers);
                 setOnlineCount(uniqueOthers.length);
             })
@@ -653,6 +660,8 @@ function Chat({ user }) {
                     await presenceChannel.track({
                         user_id: user.id,
                         nickname: user.user_metadata?.nickname || user.email.split('@')[0],
+                        avatar_url: user.user_metadata?.avatar_url,
+                        role: user.user_metadata?.role || "Opérateur",
                         online_at: new Date().toISOString(),
                     });
                 }
@@ -793,21 +802,32 @@ function Chat({ user }) {
             {!isOpen && (
                 <div className="group/presence relative">
                     {/* Tooltip List */}
+                    {/* Tooltip List (Animated Tooltip style) */}
                     {onlineUsers.length > 0 && (
-                        <div className="absolute bottom-full right-0 mb-4 opacity-0 group-hover/presence:opacity-100 transition-all duration-300 pointer-events-none translate-y-2 group-hover/presence:translate-y-0">
-                            <div className="bg-dark border-2 border-[#4ADE80] rounded-xl p-3 shadow-xl min-w-[120px]">
-                                <p className="text-[#4ADE80] font-mono text-[8px] uppercase font-black mb-2 border-b border-[#4ADE80]/20 pb-1">
-                                    En selle :
-                                </p>
-                                <div className="space-y-1">
-                                    {onlineUsers.map((name, i) => (
-                                        <div key={i} className="flex items-center gap-2">
-                                            <div className="w-1 h-1 bg-[#4ADE80] rounded-full" />
-                                            <span className="text-white font-mono text-[10px] uppercase font-bold">{name}</span>
+                        <div className="absolute bottom-full right-0 mb-4 opacity-0 group-hover/presence:opacity-100 transition-all duration-300 pointer-events-none group-hover/presence:pointer-events-auto translate-y-2 group-hover/presence:translate-y-0 flex flex-row items-center justify-end w-max z-50">
+                            {onlineUsers.map((u, idx) => (
+                                <div
+                                    key={u.id}
+                                    className="relative group/tooltip transition-transform duration-300 hover:scale-105"
+                                    style={{ marginLeft: idx === 0 ? '0' : '-16px', zIndex: onlineUsers.length - idx }}
+                                >
+                                    {/* Informations Tooltip Popup */}
+                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 pb-2 opacity-0 group-hover/tooltip:opacity-100 transition-all duration-300 scale-95 group-hover/tooltip:scale-100 flex flex-col items-center pointer-events-none z-[100] origin-bottom">
+                                        <div className="bg-dark border border-[#4ADE80] px-4 py-2 rounded-xl flex flex-col items-center whitespace-nowrap shadow-[4px_4px_0_0_#111111]">
+                                            <span className="font-mono font-black text-white text-xs uppercase">{u.name}</span>
+                                            <span className="font-mono text-[#4ADE80] text-[9px] uppercase tracking-widest mt-1">{u.designation}</span>
                                         </div>
-                                    ))}
+                                        <div className="w-0 h-0 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent border-t-[#4ADE80] -mt-[1px]"></div>
+                                    </div>
+
+                                    {/* Avatar Cercle */}
+                                    <img
+                                        src={u.image}
+                                        alt={u.name}
+                                        className="object-cover relative h-12 w-12 md:h-14 md:w-14 rounded-full border-2 border-dark bg-dark group-hover/tooltip:border-[#4ADE80] group-hover/tooltip:z-50 transition-all duration-300 shadow-xl"
+                                    />
                                 </div>
-                            </div>
+                            ))}
                         </div>
                     )}
 
