@@ -57,7 +57,7 @@ export const tripsData = [
         id: 2021,
         year: 2021,
         title: "Trip 2021",
-        bg: "/trip-2021.jpg",
+        bg: "https://images.unsplash.com/photo-1541625602330-2277a4c4618a?q=80&w=2000&auto=format&fit=crop",
         gradient: "from-[#A855F7] to-[#C98CF9]",
         route: "Reprise -> Liberté",
         distance: "250 km",
@@ -122,7 +122,7 @@ export const tripsData = [
         id: 2025,
         year: 2025,
         title: "Trip 2025",
-        bg: "/trip-2025.jpg",
+        bg: "https://images.unsplash.com/photo-1506929562872-bb421503ef21?q=80&w=2000&auto=format&fit=crop",
         gradient: "from-[#8B5CF6] to-[#B393F8]",
         route: "Bordeaux -> Biarritz",
         distance: "280 km",
@@ -136,7 +136,7 @@ export const tripsData = [
     {
         id: 2026,
         year: 2026,
-        title: "MISSION 26",
+        title: "Mission 26",
         bg: "https://images.unsplash.com/photo-1619337491481-de0b69b2050d?q=80&w=2535&auto=format&fit=crop",
         gradient: "from-[#111111] to-[#333333]",
         route: "Bordeaux -> San Sébastien",
@@ -146,6 +146,8 @@ export const tripsData = [
             { id: 2, name: "Jules", role: "Le Boucher", desc: "Pédale en force pure.", image: "https://images.unsplash.com/photo-1633332755192-727a05c4013d?q=80&w=400&h=400&fit=crop" },
             { id: 3, name: "Maxime", role: "Le Sprinteur", desc: "Intenable sur les 20 premiers km.", image: "https://images.unsplash.com/photo-1527980965255-d3b416303d12?q=80&w=400&h=400&fit=crop" }
         ],
-        photos: []
+        photos: [
+            "https://images.unsplash.com/photo-1570125909232-eb263c188f7e?q=80&w=800&auto=format&fit=crop"
+        ]
     }
 ];
