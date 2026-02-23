@@ -25,10 +25,6 @@ export default function Trombinoscope() {
     useEffect(() => {
         window.scrollTo(0, 0);
 
-        // QuickSetter pour des performances maximales
-        const setFloatX = gsap.quickSetter(floatRef.current, "x", "px");
-        const setFloatY = gsap.quickSetter(floatRef.current, "y", "px");
-
         const handleMouseMove = (e) => {
             mousePos.current = { x: e.clientX, y: e.clientY };
 
@@ -44,16 +40,25 @@ export default function Trombinoscope() {
 
         window.addEventListener('mousemove', handleMouseMove);
 
-        // Animation d'entrée des noms
-        gsap.from(".member-item", {
-            y: 50,
-            opacity: 0,
-            duration: 0.8,
-            stagger: 0.1,
-            ease: "power3.out"
+        const ctx = gsap.context(() => {
+            // Animation d'entrée forcée avec fromTo et nettoyage sécurisé des propriétés en ligne
+            gsap.fromTo(".member-item",
+                { y: 50, opacity: 0 },
+                {
+                    y: 0,
+                    opacity: 1,
+                    duration: 0.8,
+                    stagger: 0.1,
+                    ease: "power3.out",
+                    clearProps: "all" // Supprime les styles en ligne GSAP à la fin de l'animation
+                }
+            );
         });
 
-        return () => window.removeEventListener('mousemove', handleMouseMove);
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            ctx.revert();
+        };
     }, []);
 
     const activeMember = teamMembers.find(m => m.id === activeId);
