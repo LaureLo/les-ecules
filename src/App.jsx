@@ -6,6 +6,7 @@ import { supabase } from './lib/supabase';
 import { Eye, EyeOff, Send, MessageSquare, X, Bike, Paperclip, Download, FileText, PlayCircle, Image as ImageIcon, ChevronDown } from 'lucide-react';
 import Home from './pages/Home';
 import Trip from './pages/Trip';
+import Trombinoscope from './pages/Trombinoscope';
 import { tripsData } from './data/tripsData';
 gsap.registerPlugin(ScrollTrigger);
 
@@ -175,7 +176,7 @@ function Navbar({ user, onJoinClick, onProfileClick }) {
                     </div>
                 </div>
 
-                <a href="#features" className="hover:text-accent transition-all duration-300">Trombinoscope</a>
+                <Link to="/trombinoscope" className="hover:text-accent transition-all duration-300">Trombinoscope</Link>
             </div>
 
             <div className="flex items-center gap-4">
@@ -996,7 +997,7 @@ function Footer() {
                     <div className="flex flex-col gap-4">
                         <span className="text-accent text-[10px] mb-2">Expédition</span>
                         <a href="#features" className="hover:text-accent transition-colors lowercase">~ itinéraire 2026</a>
-                        <a href="#features" className="hover:text-accent transition-colors lowercase">~ trombinoscope</a>
+                        <Link to="/trombinoscope" className="hover:text-accent transition-colors lowercase">~ trombinoscope</Link>
                     </div>
                     <div className="flex flex-col gap-4">
                         <span className="text-accent text-[10px] mb-2">Archives</span>
@@ -1058,6 +1059,7 @@ function App() {
                 <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/trip/:year" element={<Trip />} />
+                    <Route path="/trombinoscope" element={<Trombinoscope />} />
                 </Routes>
             </div>
 
