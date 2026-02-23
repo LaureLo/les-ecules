@@ -148,9 +148,9 @@ function Navbar({ user, onJoinClick, onProfileClick }) {
 
     return (
         <nav
-            className="group fixed top-6 left-1/2 -translate-x-1/2 z-50 flex items-center justify-between pl-20 pr-4 md:pl-28 md:pr-4 py-2 rounded-full transition-all duration-300 w-[90%] max-w-5xl border border-dark/10 bg-background/80 backdrop-blur-xl shadow-lg text-accent"
+            className="group fixed top-6 left-1/2 -translate-x-1/2 z-[100] flex items-center justify-between pl-6 pr-4 md:pl-28 md:pr-4 py-2 rounded-full transition-all duration-300 w-[95%] max-w-5xl md:border md:border-dark/10 md:bg-background/80 md:backdrop-blur-xl md:shadow-lg text-accent"
         >
-            <Link to="/">
+            <Link to="/" className="scale-[0.6] md:scale-100 origin-left">
                 <HeaderLogo />
             </Link>
             <div className="hidden md:flex gap-8 font-mono text-lg uppercase items-center">
@@ -225,35 +225,34 @@ function Navbar({ user, onJoinClick, onProfileClick }) {
 
                 {/* MOBILE MENU TOGGLE */}
                 <button
-                    className="md:hidden p-2 text-dark hover:text-accent transition-colors"
+                    className="md:hidden p-3 text-white mix-blend-difference hover:text-accent transition-colors z-[100]"
                     onClick={() => setIsMenuOpen(!isMenuOpen)}
                 >
-                    {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
+                    {isMenuOpen ? <X size={32} /> : <Menu size={32} />}
                 </button>
             </div>
 
-            {/* MOBILE MENU DROPDOWN */}
             {isMenuOpen && (
-                <div className="absolute top-[calc(100%+1rem)] left-0 w-full bg-background border-4 border-dark rounded-3xl shadow-[8px_8px_0px_0px_#111111] p-6 flex flex-col gap-6 md:hidden">
-                    <Link to="/trip/2026" onClick={() => setIsMenuOpen(false)} className="font-sans font-black text-3xl uppercase text-dark hover:text-accent transition-colors">Itinéraire 2026</Link>
+                <div className="absolute top-[calc(100%+1rem)] left-0 w-full bg-[#F5F3EE] border-4 border-dark rounded-3xl shadow-[8px_8px_0px_0px_#111111] p-6 flex flex-col gap-8 md:hidden overflow-hidden">
+                    <Link to="/trip/2026" onClick={() => setIsMenuOpen(false)} className="font-sans font-black text-4xl uppercase text-dark hover:text-accent transition-colors">Itinéraire 2026</Link>
 
-                    <div className="flex flex-col gap-3">
+                    <Link to="/trombinoscope" onClick={() => setIsMenuOpen(false)} className="font-sans font-black text-4xl uppercase text-dark hover:text-accent transition-colors">Trombinoscope</Link>
+
+                    <div className="flex flex-col gap-4">
                         <span className="font-mono text-sm tracking-widest uppercase font-bold text-accent border-b-2 border-dark/10 pb-2">Archives</span>
-                        <div className="grid grid-cols-2 gap-4 pt-2">
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-6 pt-2">
                             {tripsData.filter(t => t.year < 2026).sort((a, b) => b.year - a.year).map(trip => (
                                 <Link
                                     key={trip.id}
                                     to={`/trip/${trip.year}`}
                                     onClick={() => setIsMenuOpen(false)}
-                                    className="font-mono text-sm font-bold uppercase hover:text-accent transition-colors"
+                                    className="font-mono text-base font-bold uppercase hover:text-accent transition-colors text-dark"
                                 >
                                     Trip {trip.year}
                                 </Link>
                             ))}
                         </div>
                     </div>
-
-                    <Link to="/trombinoscope" onClick={() => setIsMenuOpen(false)} className="font-sans font-black text-3xl uppercase text-dark hover:text-accent transition-colors mt-2">Trombinoscope</Link>
 
                     {!user && (
                         <button
