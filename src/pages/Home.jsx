@@ -1114,11 +1114,12 @@ function HeroAccordion({ onOpenRoute }) {
                                         {trip.id === 2026 ? (
                                             <div className="text-primary z-10 mb-8 md:mb-16">
                                                 <h1 className="flex flex-col gap-1 md:gap-2 relative">
-                                                    <span className="font-sans font-extrabold pb-2 text-3xl md:text-6xl lg:text-7xl tracking-tighter uppercase leading-none drop-shadow-lg">
-                                                        Conquérir la
+                                                    <span className="font-sans font-extrabold pb-2 text-4xl md:text-6xl lg:text-7xl tracking-tighter uppercase leading-none drop-shadow-lg">
+                                                        <span className="md:hidden">Conquérir la distance en 2026</span>
+                                                        <span className="hidden md:block">Conquérir la</span>
                                                     </span>
-                                                    <span className="font-serif italic text-[3.5rem] md:text-[7rem] lg:text-[9rem] leading-none mb-4 md:mb-6 text-primary flex items-end gap-2 md:gap-6 drop-shadow-lg">
-                                                        <span className="hidden md:block h-[2px] w-24 bg-accent mb-[2rem] md:mb-[3rem]"></span>
+                                                    <span className="hidden md:flex font-serif italic text-[3.5rem] md:text-[7rem] lg:text-[9rem] leading-none mb-4 md:mb-6 text-primary items-end gap-2 md:gap-6 drop-shadow-lg">
+                                                        <span className="h-[2px] w-24 bg-accent mb-[2rem] md:mb-[3rem]"></span>
                                                         Distance.
                                                     </span>
                                                 </h1>

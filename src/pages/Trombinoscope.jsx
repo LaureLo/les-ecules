@@ -75,8 +75,9 @@ export default function Trombinoscope() {
                 </Link>
 
                 <div className="flex flex-col mb-20">
-                    <h1 className="font-sans font-black text-8xl md:text-[10rem] uppercase tracking-tighter leading-[0.85] italic mb-4">
-                        Trombinoscope
+                    <h1 className="font-sans font-black text-7xl md:text-[10rem] uppercase tracking-tighter leading-[0.85] italic mb-4">
+                        <span className="md:hidden">Trombi</span>
+                        <span className="hidden md:inline">Trombinoscope</span>
                     </h1>
                     <p className="font-mono text-xl text-dark/60 max-w-2xl border-l-4 border-accent pl-6 py-2">
                         Les visages de l'effort. 10 opérateurs confirmés, prêts pour la Mission 2026.
@@ -88,7 +89,7 @@ export default function Trombinoscope() {
                     {teamMembers.map((member) => (
                         <div
                             key={member.id}
-                            className="member-item group relative py-8 md:py-12 border-b-2 border-dark/10 cursor-none flex flex-col md:flex-row md:items-center justify-between transition-all duration-300 hover:px-8 bg-transparent hover:bg-dark/5"
+                            className="member-item group relative py-8 md:py-12 border-b-2 border-dark/10 md:cursor-none flex flex-col md:flex-row md:items-center justify-between transition-all duration-300 hover:px-8 bg-transparent hover:bg-dark/5"
                             onMouseEnter={() => setActiveId(member.id)}
                             onMouseLeave={() => setActiveId(null)}
                         >

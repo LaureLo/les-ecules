@@ -76,7 +76,7 @@ function BicycleCursor() {
     return (
         <div
             ref={cursorRef}
-            className="fixed top-0 left-0 pointer-events-none z-[999999] opacity-0 transition-opacity duration-500"
+            className="fixed top-0 left-0 pointer-events-none z-[999999] opacity-0 transition-opacity duration-500 hidden md:block"
             style={{ willChange: 'transform' }}
         >
             <svg
