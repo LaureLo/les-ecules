@@ -154,7 +154,7 @@ function Navbar({ user, onJoinClick, onProfileClick }) {
                 <HeaderLogo />
             </Link>
             <div className="hidden md:flex gap-8 font-mono text-lg uppercase items-center">
-                <a href="#features" className="hover:text-accent transition-all duration-300">Itinéraire 2026</a>
+                <Link to="/trip/2026" className="hover:text-accent transition-all duration-300">Itinéraire 2026</Link>
 
                 {/* DROPDOWN ANCIENS VOYAGES */}
                 <div className="relative group/dropdown py-4">
@@ -996,7 +996,7 @@ function Footer() {
                 <div className="flex flex-wrap gap-x-16 gap-y-8 font-mono text-sm uppercase font-bold tracking-widest">
                     <div className="flex flex-col gap-4">
                         <span className="text-accent text-[10px] mb-2">Expédition</span>
-                        <a href="#features" className="hover:text-accent transition-colors lowercase">~ itinéraire 2026</a>
+                        <Link to="/trip/2026" className="hover:text-accent transition-colors lowercase">~ itinéraire 2026</Link>
                         <Link to="/trombinoscope" className="hover:text-accent transition-colors lowercase">~ trombinoscope</Link>
                     </div>
                     <div className="flex flex-col gap-4">
