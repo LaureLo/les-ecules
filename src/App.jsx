@@ -175,7 +175,7 @@ function Navbar({ user, onJoinClick, onProfileClick }) {
                     </div>
                 </div>
 
-                <a href="#features" className="hover:text-accent transition-all duration-300">Équipage</a>
+                <a href="#features" className="hover:text-accent transition-all duration-300">Trombinoscope</a>
             </div>
 
             <div className="flex items-center gap-4">
@@ -996,7 +996,7 @@ function Footer() {
                     <div className="flex flex-col gap-4">
                         <span className="text-accent text-[10px] mb-2">Expédition</span>
                         <a href="#features" className="hover:text-accent transition-colors lowercase">~ itinéraire 2026</a>
-                        <a href="#features" className="hover:text-accent transition-colors lowercase">~ équipage</a>
+                        <a href="#features" className="hover:text-accent transition-colors lowercase">~ trombinoscope</a>
                     </div>
                     <div className="flex flex-col gap-4">
                         <span className="text-accent text-[10px] mb-2">Archives</span>
