@@ -27,6 +27,7 @@
     "postcss-value-parser": "^4.2.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
+    "react-router-dom": "^7.13.0",
     "source-map-js": "^1.2.1",
     "update-browserslist-db": "^1.2.3"
   },
