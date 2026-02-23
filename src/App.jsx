@@ -3,7 +3,7 @@ import { Routes, Route, Link } from 'react-router-dom';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { supabase } from './lib/supabase';
-import { Eye, EyeOff, Send, MessageSquare, X, Bike, Paperclip, Download, FileText, PlayCircle, Image as ImageIcon, ChevronDown } from 'lucide-react';
+import { Eye, EyeOff, Send, MessageSquare, X, Bike, Paperclip, Download, FileText, PlayCircle, Image as ImageIcon, ChevronDown, Menu } from 'lucide-react';
 import Home from './pages/Home';
 import Trip from './pages/Trip';
 import Trombinoscope from './pages/Trombinoscope';
@@ -183,14 +183,14 @@ function Navbar({ user, onJoinClick, onProfileClick }) {
                 {user ? (
                     <div className="relative group/user z-50">
                         <button
-                            className="flex items-center gap-3 bg-dark text-white px-5 py-3 rounded-full font-mono text-sm uppercase tracking-widest hover:bg-accent transition-colors"
+                            className="flex items-center gap-3 bg-dark text-white px-2 py-2 md:px-5 md:py-3 rounded-full font-mono text-sm uppercase tracking-widest hover:bg-accent transition-colors"
                         >
                             {user.user_metadata?.avatar_url ? (
                                 <img src={user.user_metadata.avatar_url} alt="Avatar" className="w-8 h-8 rounded-full object-cover border-2 border-white/20" />
                             ) : (
                                 <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse mx-2" />
                             )}
-                            <span className="font-bold">{user.user_metadata?.nickname || user.email.split('@')[0]}</span>
+                            <span className="font-bold hidden md:inline">{user.user_metadata?.nickname || user.email.split('@')[0]}</span>
                             {(user.user_metadata?.role || user.user_metadata?.bike_name) && (
                                 <span className="hidden md:inline text-[10px] opacity-70 border-l border-white/30 pl-3">
                                     {user.user_metadata?.role || "Pilote"}
@@ -217,12 +217,54 @@ function Navbar({ user, onJoinClick, onProfileClick }) {
                 ) : (
                     <button
                         onClick={onJoinClick}
-                        className="btn-magnetic bg-accent text-white px-5 py-2 rounded-full font-sans font-bold text-sm tracking-wide"
+                        className="hidden md:block btn-magnetic bg-accent text-white px-5 py-2 rounded-full font-sans font-bold text-sm tracking-wide"
                     >
                         Rejoindre
                     </button>
                 )}
+
+                {/* MOBILE MENU TOGGLE */}
+                <button
+                    className="md:hidden p-2 text-dark hover:text-accent transition-colors"
+                    onClick={() => setIsMenuOpen(!isMenuOpen)}
+                >
+                    {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
+                </button>
             </div>
+
+            {/* MOBILE MENU DROPDOWN */}
+            {isMenuOpen && (
+                <div className="absolute top-[calc(100%+1rem)] left-0 w-full bg-background border-4 border-dark rounded-3xl shadow-[8px_8px_0px_0px_#111111] p-6 flex flex-col gap-6 md:hidden">
+                    <Link to="/trip/2026" onClick={() => setIsMenuOpen(false)} className="font-sans font-black text-3xl uppercase text-dark hover:text-accent transition-colors">Itinéraire 2026</Link>
+
+                    <div className="flex flex-col gap-3">
+                        <span className="font-mono text-sm tracking-widest uppercase font-bold text-accent border-b-2 border-dark/10 pb-2">Archives</span>
+                        <div className="grid grid-cols-2 gap-4 pt-2">
+                            {tripsData.filter(t => t.year < 2026).sort((a, b) => b.year - a.year).map(trip => (
+                                <Link
+                                    key={trip.id}
+                                    to={`/trip/${trip.year}`}
+                                    onClick={() => setIsMenuOpen(false)}
+                                    className="font-mono text-sm font-bold uppercase hover:text-accent transition-colors"
+                                >
+                                    Trip {trip.year}
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+
+                    <Link to="/trombinoscope" onClick={() => setIsMenuOpen(false)} className="font-sans font-black text-3xl uppercase text-dark hover:text-accent transition-colors mt-2">Trombinoscope</Link>
+
+                    {!user && (
+                        <button
+                            onClick={() => { setIsMenuOpen(false); onJoinClick(); }}
+                            className="bg-accent text-white py-4 mt-4 rounded-xl font-sans font-bold text-xl uppercase tracking-wider"
+                        >
+                            Rejoindre l'équipage
+                        </button>
+                    )}
+                </div>
+            )}
         </nav>
     );
 }
