@@ -59,7 +59,7 @@ export default function Trombinoscope() {
     const activeMember = teamMembers.find(m => m.id === activeId);
 
     return (
-        <main className="bg-background min-h-screen pt-40 pb-32 px-6 md:px-16 overflow-hidden relative">
+        <main className="bg-background min-h-screen pt-40 pb-32 px-6 md:px-16 relative">
             {/* TEXTURE GRAIN OVERLAY */}
             <div className="fixed inset-0 pointer-events-none z-[60] opacity-[0.03] mix-blend-overlay bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
 
