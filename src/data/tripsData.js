@@ -136,7 +136,7 @@ export const tripsData = [
     {
         id: 2026,
         year: 2026,
-        title: "Mission 26",
+        title: "Trip 2026",
         bg: "https://images.unsplash.com/photo-1619337491481-de0b69b2050d?q=80&w=2535&auto=format&fit=crop",
         gradient: "from-[#111111] to-[#333333]",
         route: "Bordeaux -> San Sébastien",
