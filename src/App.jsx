@@ -3,9 +3,10 @@ import { Routes, Route, Link } from 'react-router-dom';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { supabase } from './lib/supabase';
-import { Eye, EyeOff, Send, MessageSquare, X, Bike, Paperclip, Download, FileText, PlayCircle, Image as ImageIcon } from 'lucide-react';
+import { Eye, EyeOff, Send, MessageSquare, X, Bike, Paperclip, Download, FileText, PlayCircle, Image as ImageIcon, ChevronDown } from 'lucide-react';
 import Home from './pages/Home';
 import Trip from './pages/Trip';
+import { tripsData } from './data/tripsData';
 gsap.registerPlugin(ScrollTrigger);
 
 function BicycleCursor() {
@@ -151,10 +152,30 @@ function Navbar({ user, onJoinClick, onProfileClick }) {
             <Link to="/">
                 <HeaderLogo />
             </Link>
-            <div className="hidden md:flex gap-8 font-mono text-lg uppercase">
-                <a href="#features" className="hover:-translate-y-[1px] transition-all duration-300">Itinéraire</a>
-                <a href="#features" className="hover:-translate-y-[1px] transition-all duration-300">Dates</a>
-                <a href="#features" className="hover:-translate-y-[1px] transition-all duration-300">Équipage</a>
+            <div className="hidden md:flex gap-8 font-mono text-lg uppercase items-center">
+                <a href="#features" className="hover:text-accent transition-all duration-300">Itinéraire 2026</a>
+
+                {/* DROPDOWN ANCIENS VOYAGES */}
+                <div className="relative group/dropdown py-4">
+                    <button className="flex items-center gap-2 hover:text-accent transition-all duration-300">
+                        Anciens voyages <ChevronDown size={16} className="group-hover/dropdown:rotate-180 transition-transform duration-300" />
+                    </button>
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 w-48 opacity-0 group-hover/dropdown:opacity-100 transition-all pointer-events-none group-hover/dropdown:pointer-events-auto pt-2">
+                        <div className="bg-background border-4 border-dark rounded-2xl shadow-[8px_8px_0px_0px_#111111] p-2 flex flex-col gap-1 overflow-hidden">
+                            {tripsData.filter(t => t.year < 2026).sort((a, b) => b.year - a.year).map(trip => (
+                                <Link
+                                    key={trip.id}
+                                    to={`/trip/${trip.year}`}
+                                    className="px-4 py-2 hover:bg-accent hover:text-white rounded-lg transition-colors text-sm font-bold lowercase italic"
+                                >
+                                    ~ trip {trip.year}
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                <a href="#features" className="hover:text-accent transition-all duration-300">Équipage</a>
             </div>
 
             <div className="flex items-center gap-4">
@@ -971,14 +992,25 @@ function Footer() {
                     </Link>
                     <p className="font-mono text-sm text-primary/60 border-l-2 border-accent pl-4">Notre trip 2026. Bordeaux - San Sébastien.</p>
                 </div>
-                <div className="flex gap-16 font-mono text-sm uppercase font-bold tracking-widest">
-                    <div className="flex flex-col gap-6">
-                        <a href="#features" className="hover:text-accent transition-colors">Itinéraire</a>
-                        <a href="#features" className="hover:text-accent transition-colors">Dates</a>
+                <div className="flex flex-wrap gap-x-16 gap-y-8 font-mono text-sm uppercase font-bold tracking-widest">
+                    <div className="flex flex-col gap-4">
+                        <span className="text-accent text-[10px] mb-2">Expédition</span>
+                        <a href="#features" className="hover:text-accent transition-colors lowercase">~ itinéraire 2026</a>
+                        <a href="#features" className="hover:text-accent transition-colors lowercase">~ équipage</a>
                     </div>
-                    <div className="flex flex-col gap-6">
-                        <a href="#features" className="hover:text-accent transition-colors">Équipage</a>
-                        <a href="#protocole" className="hover:text-accent transition-colors">Protocole</a>
+                    <div className="flex flex-col gap-4">
+                        <span className="text-accent text-[10px] mb-2">Archives</span>
+                        <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+                            {tripsData.filter(t => t.year < 2026).sort((a, b) => b.year - a.year).map(trip => (
+                                <Link key={trip.id} to={`/trip/${trip.year}`} className="hover:text-accent transition-colors lowercase">
+                                    trip {trip.year}
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+                    <div className="flex flex-col gap-4">
+                        <span className="text-accent text-[10px] mb-2">Protocoles</span>
+                        <a href="#protocole" className="hover:text-accent transition-colors lowercase">~ sécurité</a>
                     </div>
                 </div>
             </div>
